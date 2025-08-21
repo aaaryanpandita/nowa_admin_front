@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Users, DollarSign, AlertCircle } from 'lucide-react';
 // Import the real API service instead of mock
 import { apiService } from '../../../services/apiService'; // Adjust path as needed
@@ -15,9 +15,7 @@ interface MetricCardProps {
 
 const MetricCard: React.FC<MetricCardProps> = ({ 
   title, 
-  value, 
-  change, 
-  trend, 
+  value,  
   icon: Icon, 
   color, 
   isLoading 
@@ -53,7 +51,7 @@ interface DashboardMetricsProps {
 const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
   const [dashboardData, setDashboardData] = React.useState({
     totalUsers: 0,
-    totalGlobalReward: 0
+    totalReferralTokensEarned: 0
   });
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -67,12 +65,12 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
 
       if (response.success && response.data) {
         // Destructure the 'result' object
-        const { totalUsers, totalGlobalReward } = response.data.result;
+        const { totalUsers, totalReferralTokensEarned } = response.data.result;
 
         // Set the state with the correct format
         setDashboardData({
           totalUsers,
-          totalGlobalReward
+          totalReferralTokensEarned
         });
        
       } else {
@@ -116,7 +114,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
   };
 
   const usersChange = calculateChange(dashboardData.totalUsers, 'users');
-  const earningsChange = calculateChange(dashboardData.totalGlobalReward, 'earnings');
+  const earningsChange = calculateChange(dashboardData.totalReferralTokensEarned, 'earnings');
 
   if (error && !isLoading) {
     return (
@@ -143,7 +141,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
     <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
       <MetricCard
         title="Total Users"
-        value={dashboardData.totalUsers.toString()}
+        value={(dashboardData.totalUsers ?? 0).toString()}
         change={usersChange.value}
         trend={usersChange.trend}
         icon={Users}
@@ -153,7 +151,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
 
       <MetricCard
         title="Total Referral Amount"
-        value={dashboardData.totalGlobalReward.toString()}
+        value={(dashboardData.totalReferralTokensEarned ?? 0).toString()}
         change={earningsChange.value}
         trend={earningsChange.trend}
         icon={DollarSign}

@@ -3,12 +3,15 @@ import { Plus, Loader2, AlertCircle, Calendar } from 'lucide-react';
 import TaskCard from './TaskCard';
 import AddTaskModal from './AddTaskModal';
 import { useTaskManagement } from './hooks/useTaskManagement';
+import { DailyTask } from '../../../services/apiService';
 
 const TaskManagement: React.FC = () => {
-  const { tasks, loading, error, addingTask, addTask, setError } = useTaskManagement();
+  const { tasks, loading, error, addingTask, addTask, updateTask, setError } = useTaskManagement();
 
   const [showAddTask, setShowAddTask] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [newTask, setNewTask] = useState({
+    id: undefined as string | number | undefined,
     title: '',
     description: '',
     link: '',
@@ -19,6 +22,7 @@ const TaskManagement: React.FC = () => {
 
   const resetForm = () => {
     setNewTask({
+      id: undefined,
       title: '',
       description: '',
       link: '',
@@ -26,19 +30,41 @@ const TaskManagement: React.FC = () => {
       startTime: '09:00',
       endTime: '23:59'
     });
+    setIsEditing(false);
   };
 
   const handleTaskChange = (field: string, value: string) => {
-    setNewTask(prev => ({ ...prev, [field]: value }));
+    setNewTask((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAddTask = async () => {
-    const success = await addTask(newTask);
-    if (success) {
-      resetForm();
-      setShowAddTask(false);
-    }
+const handleAddTask = async () => {
+  if (!newTask.title.trim() || !newTask.description.trim()) {
+    setError('Task title and description are required');
+    return;
+  }
+  const success = isEditing ? await updateTask(newTask) : await addTask(newTask);
+  if (success) {
+    resetForm();
+    setShowAddTask(false);
+  }
+};
+
+
+  const handleEditTask = (task: DailyTask) => {
+    setNewTask({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      link: task.link,
+      taskDate: task.taskDate || '',
+      startTime: task.startTime || '09:00',
+      endTime: task.endTime || '23:59'
+    });
+    setIsEditing(true);
+    setShowAddTask(true);
   };
+
+
 
   const handleCloseModal = () => {
     setShowAddTask(false);
@@ -98,17 +124,22 @@ const TaskManagement: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {tasks.map((task, index) => (
-            <TaskCard key={task.id || index} task={task} />
+            <TaskCard 
+              key={task.id || index} 
+              task={task} 
+              onEdit={handleEditTask}
+            />
           ))}
         </div>
       )}
 
-      {/* Add Task Modal */}
+      {/* Add/Edit Task Modal */}
       <AddTaskModal
         showModal={showAddTask}
         newTask={newTask}
         addingTask={addingTask}
         error={error}
+        isEditing={isEditing}
         onClose={handleCloseModal}
         onSubmit={handleAddTask}
         onTaskChange={handleTaskChange}

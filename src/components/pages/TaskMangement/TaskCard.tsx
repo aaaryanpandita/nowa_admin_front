@@ -1,12 +1,13 @@
 import React from 'react';
-import { Twitter, MessageSquare, Share, ExternalLink, Edit, Trash2, Calendar, Clock } from 'lucide-react';
+import { Twitter, MessageSquare, Share, ExternalLink, Edit, Calendar, Clock } from 'lucide-react';
 import { DailyTask } from '../../../services/apiService';
 
 interface TaskCardProps {
   task: DailyTask;
+  onEdit: (task: DailyTask) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit }) => {
   const getTaskIcon = (title: string) => {
     const titleLower = title.toLowerCase();
     if (titleLower.includes('twitter') || titleLower.includes('tweet')) return Twitter;
@@ -15,39 +16,46 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     return ExternalLink;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', day: 'numeric', year: 'numeric' 
-    });
-  };
-
-  const formatTime = (timeString: string | undefined) => {
-    // Handle undefined timeString
-    if (!timeString) return 'N/A';
-    
-    const [hours, minutes] = timeString.split(':');
-    const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
-    return date.toLocaleTimeString('en-US', { 
-      hour: 'numeric', minute: '2-digit', hour12: true 
-    });
-  };
-
   const isTaskActive = () => {
-    // Since API doesn't return startTime/endTime, we'll consider all tasks as active
-    // You might want to implement different logic based on createdAt/updatedAt
-    // For now, let's make tasks active if they were created today
-    if (!task.createdAt) return false;
+    if (!task.taskDate || !task.startTime || !task.endTime) return false;
     
     const now = new Date();
-    const taskCreated = new Date(task.createdAt);
+    const currentDate = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const currentTime = now.toTimeString().split(' ')[0].slice(0, 5); // HH:MM
     
-    // Check if task was created today (simple active logic)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    taskCreated.setHours(0, 0, 0, 0);
+    // Check if task is for today
+    if (task.taskDate !== currentDate) {
+      return task.taskDate > currentDate; // Future task
+    }
     
-    return taskCreated.getTime() >= today.getTime();
+    // If task is for today, check if we're within the time range
+    const startTime = task.startTime.slice(0, 5); // Get HH:MM from HH:MM:SS
+    const endTime = task.endTime.slice(0, 5); // Get HH:MM from HH:MM:SS
+    return currentTime >= startTime && currentTime <= endTime;
+  };
+
+  const formatTime = (timeString: string) => {
+    if (!timeString) return '';
+    // Convert HH:MM:SS to HH:MM AM/PM format
+    const [hours, minutes] = timeString.split(':');
+    const hour24 = parseInt(hours);
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    return `${hour12}:${minutes} ${period}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+
+  const handleEdit = () => {
+    onEdit(task);
   };
 
   const Icon = getTaskIcon(task.title);
@@ -56,40 +64,50 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   return (
     <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm hover:bg-gray-800/70 transition-all duration-300 group">
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+        <div className="flex items-center space-x-3 flex-1 min-w-0">
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
             active ? 'bg-gradient-to-r from-[#00FFA9] to-[#00CC87]' : 'bg-gray-600'
           }`}>
-            <Icon className={`w-6 h-6 ${active ? 'text-black' : 'text-gray-400'}`} />
+            <Icon className={`w-6 h-6   'text-gray-400'}`} />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3 className="text-lg font-semibold text-white line-clamp-1">{task.title}</h3>
             <p className="text-sm text-gray-400 line-clamp-2">{task.description}</p>
           </div>
         </div>
-        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="p-2 text-gray-400 hover:text-blue-400 transition-colors">
-            <Edit className="w-4 h-4" />
-          </button>
-          <button className="p-2 text-gray-400 hover:text-red-400 transition-colors">
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+        <div className="flex space-x-2 opacity-100 group-hover:opacity-100 transition-opacity flex-shrink-0">
+  <button 
+    onClick={handleEdit}
+    className="p-2 text-gray-400 hover:text-blue-400 transition-colors"
+    title="Edit task"
+  >
+    <Edit className="w-4 h-4" />
+  </button>
+</div>
+
       </div>
 
       <div className="space-y-3">
-       
-
-        {/* Since API doesn't return startTime/endTime, we'll show creation time instead */}
-        {task.createdAt && (
+        {/* Task Date */}
+        {task.taskDate && (
           <div className="flex items-center text-sm text-gray-400">
-            <Clock className="w-4 h-4 mr-2" />
-            <span>Created: {new Date(task.createdAt).toLocaleTimeString('en-US', { 
-              hour: 'numeric', minute: '2-digit', hour12: true 
-            })}</span>
+            <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span>Date: {formatDate(task.taskDate)}</span>
           </div>
         )}
 
+        {/* Start and End Time */}
+        {task.startTime && task.endTime && (
+          <div className="flex items-center text-sm text-gray-400">
+            <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span>Time: {formatTime(task.startTime)} - {formatTime(task.endTime)}</span>
+          </div>
+        )}
+
+        {/* Active Status Badge */}
+        
+
+        {/* Task Link */}
         {task.link && (
           <a
             href={task.link}
@@ -97,7 +115,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             rel="noopener noreferrer"
             className="flex items-center space-x-2 text-[#00FFA9] hover:text-[#00CC87] transition-colors text-sm"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-4 h-4 flex-shrink-0" />
             <span className="truncate">View Task</span>
           </a>
         )}

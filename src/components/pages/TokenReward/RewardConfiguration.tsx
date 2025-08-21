@@ -14,6 +14,11 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
   const [isFetchingReward, setIsFetchingReward] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+ const [rewardId, setRewardId] = useState<number | undefined>(undefined);
+
+
+
+  
 
   // Fetch the latest referral reward on component mount
   const fetchLatestReferralReward = async () => {
@@ -25,12 +30,13 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
       
       if (response.success && response.result && response.result.length > 0) {
         // Get the latest reward (highest ID)
-        const latestReward = response.result[0].refferedreward;
-        console.log('💰 Setting referral reward to:', latestReward);
+        const latestReward = response.result[0];
+        console.log('💰 Setting referral reward to:', latestReward.refferedreward);
         
         // Update BOTH states - this is the key fix
-        setCurrentReferralReward(latestReward.toString());
-        setReferralReward(latestReward.toString()); // Update input field too
+        setCurrentReferralReward(latestReward.refferedreward.toString());
+        setReferralReward(latestReward.refferedreward.toString()); // Update input field too
+         setRewardId(latestReward.id); // Save the id!
       } else {
         console.warn('⚠️ No referral reward found, using default value');
         // Keep default value
@@ -60,7 +66,7 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
         throw new Error('Please enter a valid reward amount');
       }
 
-      const response = await apiService.addReferralReward(rewardAmount);
+     const response = await apiService.addReferralReward(rewardAmount, rewardId);
 
       if (response.success) {
         toast.success(response.message || 'Referral reward updated successfully!');
@@ -176,7 +182,7 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
           </p>
         </div>
 
-        <div className="pt-4 border-t border-gray-700">
+        {/* <div className="pt-4 border-t border-gray-700">
           <h3 className="text-lg font-semibold text-white mb-4">Current Earning Rules</h3>
           <div className="space-y-3">
             {[
@@ -191,7 +197,7 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

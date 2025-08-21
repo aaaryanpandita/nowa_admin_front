@@ -1,6 +1,6 @@
 import React from 'react';
 import RewardConfiguration from './RewardConfiguration';
-import ClaimControl from './ClaimControl';
+// import ClaimControl from './ClaimControl';
 
 const TokenReward: React.FC = () => {
   const handleRewardSaveSuccess = () => {
@@ -22,7 +22,7 @@ const TokenReward: React.FC = () => {
         <RewardConfiguration onSaveSuccess={handleRewardSaveSuccess} />
         
         {/* Claim Control Component */}
-        <ClaimControl />
+        {/* <ClaimControl /> */}
       </div>
     </div>
   );

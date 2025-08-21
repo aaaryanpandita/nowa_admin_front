@@ -33,8 +33,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) 
             <Coins className="w-6 h-6 text-black" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">CryptoAdmin</h2>
-            <p className="text-sm text-gray-400">Referral & Staking</p>
+            <h2 className="text-xl font-bold text-white">NowaAdmin</h2>
+           
           </div>
         </div>
       </div>

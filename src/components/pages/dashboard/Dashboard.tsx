@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, DollarSign, AlertCircle } from 'lucide-react';
+import {  AlertCircle } from 'lucide-react';
 // Import the real API service instead of mock
 import DashboardMetrics from './DashboardMetrics';
 
@@ -21,29 +21,28 @@ const Dashboard: React.FC = () => {
     setTimeout(() => setNotification(null), 5000);
   };
 
-  const chartData = {
-    userGrowth: [
-      { date: 'Jan 1', users: 1200 },
-      { date: 'Jan 8', users: 1850 },
-      { date: 'Jan 15', users: 2400 },
-      { date: 'Jan 22', users: 3200 },
-      { date: 'Jan 29', users: 4100 },
-      { date: 'Feb 5', users: 5200 },
-      { date: 'Feb 12', users: 6800 }
-    ],
-    referralEarnings: [
-      { date: 'Jan 1', earnings: 2500 },
-      { date: 'Jan 8', earnings: 3200 },
-      { date: 'Jan 15', earnings: 4100 },
-      { date: 'Jan 22', earnings: 5800 },
-      { date: 'Jan 29', earnings: 7200 },
-      { date: 'Feb 5', earnings: 9100 },
-      { date: 'Feb 12', earnings: 12400 }
-    ]
-  };
+  // const chartData = {
+  //   userGrowth: [
+  //     { date: 'Jan 1', users: 1200 },
+  //     { date: 'Jan 8', users: 1850 },
+  //     { date: 'Jan 15', users: 2400 },
+  //     { date: 'Jan 22', users: 3200 },
+  //     { date: 'Jan 29', users: 4100 },
+  //     { date: 'Feb 5', users: 5200 },
+  //     { date: 'Feb 12', users: 6800 }
+  //   ],
+  //   referralEarnings: [
+  //     { date: 'Jan 1', earnings: 2500 },
+  //     { date: 'Jan 8', earnings: 3200 },
+  //     { date: 'Jan 15', earnings: 4100 },
+  //     { date: 'Jan 22', earnings: 5800 },
+  //     { date: 'Jan 29', earnings: 7200 },
+  //     { date: 'Feb 5', earnings: 9100 },
+  //     { date: 'Feb 12', earnings: 12400 }
+  //   ]
+  // };
 
-  const maxUsers = Math.max(...chartData.userGrowth.map(d => d.users));
-  const maxEarnings = Math.max(...chartData.referralEarnings.map(d => d.earnings));
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black p-6">
@@ -76,7 +75,7 @@ const Dashboard: React.FC = () => {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* User Growth Chart */}
-          <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm">
+          {/* <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white">User Growth Timeline</h3>
               <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -99,10 +98,10 @@ const Dashboard: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Referral Earnings Chart */}
-          <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm">
+          {/* <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white">Daily Referral Earnings</h3>
               <div className="flex items-center space-x-2 text-sm text-gray-400">
@@ -125,11 +124,11 @@ const Dashboard: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Top Performers */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm">
             <h3 className="text-xl font-semibold text-white mb-6">Top Referrers</h3>
             <div className="space-y-4">
@@ -192,7 +191,7 @@ const Dashboard: React.FC = () => {
               <p className="text-sm text-gray-400 mt-1">≈ $127,843,291 USD</p>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

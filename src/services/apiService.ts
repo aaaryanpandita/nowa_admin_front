@@ -1,5 +1,5 @@
-// services/apiService.ts
-const API_BASE_URL = 'http://172.16.16.206:8083/api/v1';
+// services/apiService.ts - Fixed for proper dynamic pagination
+const API_BASE_URL = 'https://nowa-ref-api.tarality.io/api/v1';
 
 interface LoginCredentials {
   email: string;
@@ -20,16 +20,13 @@ interface LoginResponse {
 interface DashboardData {
   result: {
     totalUsers: number;
-    totalGlobalReward: number;
-    users:string;
+    totalReferralTokensEarned: number;
+    users: string;
     referredUsers: string;
-    
   };
 }
 
-interface ReferralRewardData {
-  referralReward: number;
-}
+
 
 interface ReferralRewardResponse {
   success: boolean;
@@ -53,15 +50,13 @@ interface GetReferralRewardResponse {
 
 // New interfaces for task management
 interface DailyTask {
-  id?: string;
+  id?: string | number;
   title: string;
   description: string;
   link: string;
-  // Properties used when creating tasks (POST)
   taskDate?: string;     
   startTime?: string;    
   endTime?: string;      
-  // Properties returned by API (GET)
   createdAt?: string;    
   updatedAt?: string;    
 }
@@ -74,13 +69,28 @@ interface TasksResponse {
   success: boolean;
   message?: string;
   result?: {
-    tasks: DailyTask[];  // Corrected: result contains the tasks array
-    totalTasks: number;  // Total number of tasks, if needed
+    tasks: DailyTask[];
+    totalTasks: number;
   };
 }
+
 interface ApiResponse<T> {
   success: boolean;
   data?: T;
+  message?: string;
+}
+
+// Enhanced interface for user referrals response
+interface UserReferralsResponse {
+  success: boolean;
+  data?: {
+    referrals: any[];
+    totalReferrals: number;
+    currentPage: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  } | null;
   message?: string;
 }
 
@@ -179,30 +189,38 @@ export class ApiService {
     }
   }
 
-  async getAllUsersWithReferrals(): Promise<ApiResponse<DashboardData>> {
+  // Enhanced method with dynamic pagination support - supports both page and refPage
+  async getAllUsersWithReferrals(page: number = 1, refPage?: number): Promise<ApiResponse<DashboardData>> {
     try {
-      const response = await this.authenticatedFetch(
-        `${API_BASE_URL}/admin/getAllUsersWithReferrals`
-      );
+      // Build query parameters dynamically
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      
+      if (refPage && refPage > 0) {
+        params.append('refPage', refPage.toString());
+      }
 
+      const url = `${API_BASE_URL}/admin/getAllUsersWithReferrals?${params.toString()}`;
+      console.log(`🔄 Fetching users data: ${url}`);
+      
+      const response = await this.authenticatedFetch(url);
       const data = await response.json();
-
-      console.log("the data is",data)
+      console.log("📋 Main users response:", data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch dashboard data');
       }
 
-      const { totalUsers, totalGlobalReward, users,referredUsers } = data.result;
+      const { totalUsers, totalReferralTokensEarned, users, referredUsers } = data.result;
       
-     console.log("the cou is",data.result.users)
+      console.log("📊 Users count:", data.result.users?.length || 0);
 
       return {
         success: true,
         data: {
           result: {
             totalUsers,
-            totalGlobalReward,
+            totalReferralTokensEarned,
             referredUsers,
             users
           }
@@ -217,16 +235,195 @@ export class ApiService {
     }
   }
 
-  // New method to add referral reward
-  async addReferralReward(refferedreward: number): Promise<ReferralRewardResponse> {
+  // New method - specifically for getting user referrals with pagination
+  async getUserReferrals(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
     try {
+      // Validate inputs
+      if (!userId || isNaN(userId) || userId <= 0) {
+        console.error('❌ Invalid userId provided:', userId);
+        return {
+          success: false,
+          data: null,
+          message: 'Invalid user ID provided'
+        };
+      }
+
+      if (!refPage || isNaN(refPage) || refPage <= 0) {
+        console.error('❌ Invalid refPage provided:', refPage);
+        refPage = 1; // Default to page 1
+      }
+
+      console.log(`🔄 Fetching referrals for user ${userId}, refPage ${refPage}...`);
+      
+      // Use the correct endpoint with proper structure
+      const url = `${API_BASE_URL}/admin/getAllUsersWithReferrals?page=1&refPage=${refPage}&userId=${userId}`;
+      console.log(`📍 API URL: ${url}`);
+      
+      const response = await this.authenticatedFetch(url);
+      const data = await response.json();
+      
+      console.log(`📋 User ${userId} referrals response (refPage ${refPage}):`, data);
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch user referrals');
+      }
+
+      // Extract referral data from response - adjust based on your actual API response structure
+      let referrals = [];
+      let totalReferrals = 0;
+
+      // Check if the response has the expected structure
+      if (data.result && data.result.users) {
+        // Find the specific user's data
+        const userData = Array.isArray(data.result.users) 
+          ? data.result.users.find((user: any) => user.id === userId)
+          : data.result.users;
+
+        if (userData && userData.referredUsers) {
+          referrals = userData.referredUsers;
+          totalReferrals = userData.totalReferrals || referrals.length;
+        }
+      } else if (data.result && data.result.referrals) {
+        // Alternative structure
+        referrals = data.result.referrals;
+        totalReferrals = data.result.totalReferrals || referrals.length;
+      }
+
+      const referralsPerPage = 10;
+      const totalPages = Math.ceil(totalReferrals / referralsPerPage);
+
+      console.log(`✅ User ${userId} referrals fetched: ${referrals.length} items, refPage ${refPage}/${totalPages}`);
+
+      return {
+        success: true,
+        data: {
+          referrals: referrals,
+          totalReferrals: totalReferrals,
+          currentPage: refPage,
+          totalPages: totalPages,
+          hasNextPage: refPage < totalPages,
+          hasPrevPage: refPage > 1
+        },
+        message: data.message
+      };
+    } catch (error) {
+      console.error('❌ Get user referrals error:', error);
+      return {
+        success: false,
+        data: null,
+        message: error instanceof Error ? error.message : 'Network error occurred'
+      };
+    }
+  }
+
+  // Keep the old method for backward compatibility but redirect to new implementation
+  async getAllUsersWithReferral(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
+    console.log('⚠️ Using deprecated method getAllUsersWithReferral, redirecting to getUserReferrals');
+    return this.getUserReferrals(userId, refPage);
+  }
+
+  // Alternative method if the API structure is different
+  async getUserReferralsAlternative(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
+    try {
+      // Validate inputs
+      if (!userId || isNaN(userId) || userId <= 0) {
+        console.error('❌ Invalid userId provided:', userId);
+        return {
+          success: false,
+          data: null,
+          message: 'Invalid user ID provided'
+        };
+      }
+
+      if (!refPage || isNaN(refPage) || refPage <= 0) {
+        refPage = 1; // Default to page 1
+      }
+
+      console.log(`🔄 Alternative: Fetching referrals for user ${userId}, refPage ${refPage}...`);
+      
+      // Try different endpoint patterns
+      const possibleUrls = [
+        `${API_BASE_URL}/admin/getUserReferrals?userId=${userId}&refPage=${refPage}`,
+        `${API_BASE_URL}/admin/user/${userId}/referrals?page=${refPage}`,
+        `${API_BASE_URL}/admin/users/${userId}/referrals?refPage=${refPage}`,
+        `${API_BASE_URL}/admin/getAllUsersWithReferrals/${userId}?refPage=${refPage}`
+      ];
+
+      let lastError = null;
+
+      for (const url of possibleUrls) {
+        try {
+          console.log(`🔄 Trying URL: ${url}`);
+          const response = await this.authenticatedFetch(url);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`✅ Success with URL: ${url}`, data);
+            
+            // Process the response based on the actual structure
+            let referrals = [];
+            let totalReferrals = 0;
+
+            if (data.result) {
+              if (data.result.referrals) {
+                referrals = data.result.referrals;
+                totalReferrals = data.result.totalReferrals || referrals.length;
+              } else if (data.result.referredUsers) {
+                referrals = data.result.referredUsers;
+                totalReferrals = data.result.totalReferrals || referrals.length;
+              } else if (Array.isArray(data.result)) {
+                referrals = data.result;
+                totalReferrals = referrals.length;
+              }
+            }
+
+            const referralsPerPage = 10;
+            const totalPages = Math.ceil(totalReferrals / referralsPerPage);
+
+            return {
+              success: true,
+              data: {
+                referrals: referrals,
+                totalReferrals: totalReferrals,
+                currentPage: refPage,
+                totalPages: totalPages,
+                hasNextPage: refPage < totalPages,
+                hasPrevPage: refPage > 1
+              },
+              message: data.message
+            };
+          }
+        } catch (error) {
+          lastError = error;
+          console.log(`❌ Failed with URL: ${url}`, error);
+        }
+      }
+
+      throw lastError || new Error('All endpoint attempts failed');
+
+    } catch (error) {
+      console.error('❌ Get user referrals alternative error:', error);
+      return {
+        success: false,
+        data: null,
+        message: error instanceof Error ? error.message : 'Network error occurred'
+      };
+    }
+  }
+
+  // New method to add referral reward
+  async addReferralReward(refferedreward: number, id?: number): Promise<ReferralRewardResponse> {
+    try {
+      const payload: any = { refferedreward };
+      if (id) payload.id = id;
+
       console.log('🚀 Adding referral reward:', refferedreward);
 
       const response = await this.authenticatedFetch(
         `${API_BASE_URL}/admin/addRefferalReward`,
         {
           method: 'POST',
-           body: JSON.stringify({ refferedreward: refferedreward }),
+           body: JSON.stringify(payload),
         }
       );
 
@@ -343,33 +540,39 @@ export class ApiService {
     }
   }
 
-  // Add daily task(s)
+  // Add daily task method
   async addDailyTask(taskData: CreateTaskPayload): Promise<TasksResponse> {
     try {
-      console.log('🚀 Adding daily task(s):', taskData);
+      console.log('🚀 Adding or updating task(s):', taskData);
+
+      // Extract the first task from the array for the API call
+      const taskToSend = taskData.tasks[0];
+      
+      // Log what we're actually sending
+      console.log('📤 Sending task data:', taskToSend);
 
       const response = await this.authenticatedFetch(
         `${API_BASE_URL}/admin/addDailyTask`,
         {
           method: 'POST',
-          body: JSON.stringify(taskData),
+          body: JSON.stringify(taskToSend),
         }
       );
 
       const data = await response.json();
-      console.log('📤 Add task response:', data);
+      console.log('📤 Add/Update task response:', data);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to add daily task');
+        throw new Error(data.message || data.responseMessage || 'Failed to add/update daily task');
       }
 
       return {
         success: true,
-        message: data.message || 'Daily task added successfully',
+        message: data.message || data.responseMessage || 'Daily task added/updated successfully',
         result: data.result
       };
     } catch (error) {
-      console.error('❌ Add daily task error:', error);
+      console.error('❌ Add/Update daily task error:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Network error occurred'
@@ -407,4 +610,11 @@ export class ApiService {
 export const apiService = ApiService.getInstance();
 
 // Export types for use in components
-export type { DailyTask, CreateTaskPayload, TasksResponse, ReferralReward, GetReferralRewardResponse };
+export type { 
+  DailyTask, 
+  CreateTaskPayload, 
+  TasksResponse, 
+  ReferralReward, 
+  GetReferralRewardResponse,
+  UserReferralsResponse 
+};
