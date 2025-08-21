@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import Sidebar from './layout/Sidebar';
-import DashboardOverview from './pages/DashboardOverview';
-import ReferralSettings from './pages/ReferralSettings';
-import TaskManagement from './pages/TaskManagement';
-import UserManagement from './pages/UserManagement';
-import Analytics from './pages/Analytics';
-import Settings from './pages/Settings';
+
+import TokenReward from './pages/TokenReward/TokenReward';
+import TaskManagement from './pages/TaskMangement/TaskManagement';
+import UserManagement from './pages/UserRefferal/UserManagement';
+import Dashboard from './pages/dashboard/Dashboard';
+
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -16,20 +16,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard':
-        return <DashboardOverview />;
-      case 'referrals':
-        return <ReferralSettings />;
+      
+      case 'Token_Reward':
+        return <TokenReward />;
       case 'tasks':
         return <TaskManagement />;
       case 'users':
         return <UserManagement />;
       case 'analytics':
-        return <Analytics />;
-      case 'settings':
-        return <Settings />;
+        return <Dashboard />;
+    
       default:
-        return <DashboardOverview />;
+        return <Dashboard />;
     }
   };
 

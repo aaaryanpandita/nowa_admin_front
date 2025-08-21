@@ -1,0 +1,121 @@
+import React, { useState } from 'react';
+import { Plus, Loader2, AlertCircle, Calendar } from 'lucide-react';
+import TaskCard from './TaskCard';
+import AddTaskModal from './AddTaskModal';
+import { useTaskManagement } from './hooks/useTaskManagement';
+
+const TaskManagement: React.FC = () => {
+  const { tasks, loading, error, addingTask, addTask, setError } = useTaskManagement();
+
+  const [showAddTask, setShowAddTask] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    link: '',
+    taskDate: '',
+    startTime: '09:00',
+    endTime: '23:59'
+  });
+
+  const resetForm = () => {
+    setNewTask({
+      title: '',
+      description: '',
+      link: '',
+      taskDate: '',
+      startTime: '09:00',
+      endTime: '23:59'
+    });
+  };
+
+  const handleTaskChange = (field: string, value: string) => {
+    setNewTask(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddTask = async () => {
+    const success = await addTask(newTask);
+    if (success) {
+      resetForm();
+      setShowAddTask(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowAddTask(false);
+    setError(null);
+    resetForm();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="flex items-center space-x-3 text-gray-400">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Loading tasks...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Task Management</h1>
+          <p className="text-gray-400 mt-2">Create and manage daily tasks for users</p>
+        </div>
+        <button
+          onClick={() => setShowAddTask(true)}
+          className="flex items-center space-x-2 bg-gradient-to-r from-[#00FFA9] to-[#00CC87] text-black font-semibold px-6 py-3 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-[#00FFA9]/25"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Add Task</span>
+        </button>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center space-x-3">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <div>
+            <p className="text-red-400 font-medium">Error</p>
+            <p className="text-red-300 text-sm">{error}</p>
+          </div>
+          <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-300">×</button>
+        </div>
+      )}
+
+      {/* Task List */}
+      {!Array.isArray(tasks) || tasks.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Calendar className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-300 mb-2">No tasks found</h3>
+          <p className="text-gray-500">Create your first daily task to get started</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {tasks.map((task, index) => (
+            <TaskCard key={task.id || index} task={task} />
+          ))}
+        </div>
+      )}
+
+      {/* Add Task Modal */}
+      <AddTaskModal
+        showModal={showAddTask}
+        newTask={newTask}
+        addingTask={addingTask}
+        error={error}
+        onClose={handleCloseModal}
+        onSubmit={handleAddTask}
+        onTaskChange={handleTaskChange}
+        onErrorClose={() => setError(null)}
+      />
+    </div>
+  );
+};
+
+export default TaskManagement;

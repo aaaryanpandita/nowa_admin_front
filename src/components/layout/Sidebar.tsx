@@ -4,8 +4,7 @@ import {
   Users, 
   Gift, 
   CheckSquare, 
-  BarChart3, 
-  Settings,
+ 
   LogOut,
   Coins
 } from 'lucide-react';
@@ -19,11 +18,11 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'referrals', label: 'Referrals', icon: Gift },
+    { id: 'Token_Reward', label: 'Token Reward', icon: Gift },
     { id: 'tasks', label: 'Tasks', icon: CheckSquare },
     { id: 'users', label: 'Users', icon: Users },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    
+   
   ];
 
   return (
