@@ -1,5 +1,5 @@
 // services/apiService.ts - Fixed for proper dynamic pagination
-const API_BASE_URL = 'http://localhost:8083/api/v1';
+const API_BASE_URL = 'https://nowa-ref-api.tarality.io/api/v1';
 
 interface LoginCredentials {
   email: string;
