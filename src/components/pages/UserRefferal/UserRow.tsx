@@ -1,6 +1,6 @@
-// Enhanced UserRow.tsx - Dynamic Referral Pagination
+// Enhanced UserRow.tsx - Dynamic Referral Pagination with Loading States
 import React from 'react';
-import { ChevronDown, ChevronRight, Users, Award,  Check, X, ChevronLeft } from 'lucide-react';
+import { ChevronDown, ChevronRight, Users, Award, Check, X, ChevronLeft, Loader } from 'lucide-react';
 import { User } from './types/userTypes';
 
 interface UserRowProps {
@@ -11,6 +11,7 @@ interface UserRowProps {
     currentRefPage?: number;
     onRefPageChange?: (userId: number, page: number) => void;
     totalReferralPages?: number;
+    isLoadingReferrals?: boolean;
 }
 
 export const UserRow: React.FC<UserRowProps> = ({
@@ -20,14 +21,9 @@ export const UserRow: React.FC<UserRowProps> = ({
     referralsPerPage = 10,
     currentRefPage = 1,
     onRefPageChange,
-    totalReferralPages = 0
+    totalReferralPages = 0,
+    isLoadingReferrals = false
 }) => {
-  
-
-    const formatAddress = (address: string) => {
-        return `${address.slice(0, 6)}...${address.slice(-4)}`;
-    };
-
     const TaskStatus: React.FC<{ completed: boolean; label: string }> = ({ completed, label }) => (
         <div className="flex items-center space-x-2">
             <div className={`flex items-center justify-center w-5 h-5 rounded-full ${completed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
@@ -118,7 +114,7 @@ export const UserRow: React.FC<UserRowProps> = ({
                         )}
                         <div>
                             <p className="text-white font-medium" title={user.walletAddress}>
-                                {formatAddress(user.walletAddress)}
+                                {user.walletAddress}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 mt-1">
                                 {!user.socialTasksCompleted && user.referralTasksCompleted && (
@@ -175,13 +171,20 @@ export const UserRow: React.FC<UserRowProps> = ({
                                     <h4 className="text-lg font-semibold text-white">
                                         Referrals ({user.referralCount} total)
                                     </h4>
-                                    <span className="text-sm text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                                        Showing {currentReferrals.length} of {user.referralCount}
-                                    </span>
+                                    {isLoadingReferrals ? (
+                                        <div className="flex items-center space-x-2">
+                                            <Loader className="w-4 h-4 animate-spin text-[#00FFA9]" />
+                                            <span className="text-sm text-gray-400">Loading...</span>
+                                        </div>
+                                    ) : (
+                                        <span className="text-sm text-gray-400 bg-gray-700 px-2 py-1 rounded">
+                                            Showing {currentReferrals.length} of {user.referralCount}
+                                        </span>
+                                    )}
                                 </div>
                                 
                                 {/* Enhanced Dynamic Referral Pagination Controls */}
-                                {actualTotalPages > 1 && (
+                                {actualTotalPages > 1 && !isLoadingReferrals && (
                                     <div className="flex items-center space-x-2 text-sm">
                                         <span className="text-gray-400 bg-gray-700 px-3 py-1 rounded">
                                             Page {currentRefPage} of {actualTotalPages}
@@ -291,7 +294,16 @@ export const UserRow: React.FC<UserRowProps> = ({
                     </tr>
 
                     {/* Individual Referral Rows */}
-                    {currentReferrals.length > 0 ? (
+                    {isLoadingReferrals ? (
+                        <tr className="border-b border-gray-700/30 bg-gray-800/30">
+                            <td colSpan={4} className="p-6 pl-20 text-center">
+                                <div className="flex items-center justify-center space-x-3 text-gray-400 text-sm">
+                                    <Loader className="w-5 h-5 animate-spin text-[#00FFA9]" />
+                                    <span>Loading referrals...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    ) : currentReferrals.length > 0 ? (
                         currentReferrals.map((referral, index) => (
                             <tr
                                 key={`${referral.id}-${index}`}
@@ -304,7 +316,7 @@ export const UserRow: React.FC<UserRowProps> = ({
                                             className="text-white text-sm font-mono"
                                             title={referral.walletAddress}
                                         >
-                                            {formatAddress(referral.walletAddress)}
+                                            {referral.walletAddress}
                                         </span>
                                         <span className="text-xs text-gray-500">
                                             #{((currentRefPage - 1) * referralsPerPage) + index + 1}
@@ -336,7 +348,7 @@ export const UserRow: React.FC<UserRowProps> = ({
                             <td colSpan={4} className="p-6 pl-20 text-center">
                                 <div className="text-gray-400 text-sm">
                                     <Users className="w-6 h-6 mx-auto mb-2 opacity-50" />
-                                    {user.referralCount ? 'Loading referral details...' : 'No referrals found'}
+                                    {user.referralCount ? 'No referrals found for this page' : 'No referrals found'}
                                 </div>
                             </td>
                         </tr>

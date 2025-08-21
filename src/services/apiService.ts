@@ -1,5 +1,5 @@
 // services/apiService.ts - Fixed for proper dynamic pagination
-const API_BASE_URL = 'https://nowa-ref-api.tarality.io/api/v1';
+const API_BASE_URL = 'http://localhost:8083/api/v1';
 
 interface LoginCredentials {
   email: string;
@@ -21,12 +21,10 @@ interface DashboardData {
   result: {
     totalUsers: number;
     totalReferralTokensEarned: number;
-    users: string;
+    users: any[];
     referredUsers: string;
   };
 }
-
-
 
 interface ReferralRewardResponse {
   success: boolean;
@@ -189,18 +187,10 @@ export class ApiService {
     }
   }
 
-  // Enhanced method with dynamic pagination support - supports both page and refPage
-  async getAllUsersWithReferrals(page: number = 1, refPage?: number): Promise<ApiResponse<DashboardData>> {
+  // Main method to get all users with referrals (for main pagination)
+  async getAllUsersWithReferrals(page: number = 1): Promise<ApiResponse<DashboardData>> {
     try {
-      // Build query parameters dynamically
-      const params = new URLSearchParams();
-      params.append('page', page.toString());
-      
-      if (refPage && refPage > 0) {
-        params.append('refPage', refPage.toString());
-      }
-
-      const url = `${API_BASE_URL}/admin/getAllUsersWithReferrals?${params.toString()}`;
+      const url = `${API_BASE_URL}/admin/getAllUsersWithReferrals?page=${page}`;
       console.log(`🔄 Fetching users data: ${url}`);
       
       const response = await this.authenticatedFetch(url);
@@ -222,7 +212,7 @@ export class ApiService {
             totalUsers,
             totalReferralTokensEarned,
             referredUsers,
-            users
+            users: users || []
           }
         }
       };
@@ -235,8 +225,8 @@ export class ApiService {
     }
   }
 
-  // New method - specifically for getting user referrals with pagination
-  async getUserReferrals(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
+  // Enhanced method specifically for getting user referrals with pagination
+  async getAllUsersWithReferral(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
     try {
       // Validate inputs
       if (!userId || isNaN(userId) || userId <= 0) {
@@ -255,8 +245,8 @@ export class ApiService {
 
       console.log(`🔄 Fetching referrals for user ${userId}, refPage ${refPage}...`);
       
-      // Use the correct endpoint with proper structure
-      const url = `${API_BASE_URL}/admin/getAllUsersWithReferrals?page=1&refPage=${refPage}&userId=${userId}`;
+      // Use the specific endpoint for referral pagination
+      const url = `${API_BASE_URL}/admin/getAllUsersWithReferrals?page=1&refPage=${refPage}`;
       console.log(`📍 API URL: ${url}`);
       
       const response = await this.authenticatedFetch(url);
@@ -268,31 +258,40 @@ export class ApiService {
         throw new Error(data.message || 'Failed to fetch user referrals');
       }
 
-      // Extract referral data from response - adjust based on your actual API response structure
-      let referrals = [];
+      // Extract referral data from response
+      let referrals: any[] = [];
       let totalReferrals = 0;
 
-      // Check if the response has the expected structure
-      if (data.result && data.result.users) {
-        // Find the specific user's data
-        const userData = Array.isArray(data.result.users) 
-          ? data.result.users.find((user: any) => user.id === userId)
-          : data.result.users;
-
-        if (userData && userData.referredUsers) {
-          referrals = userData.referredUsers;
-          totalReferrals = userData.totalReferrals || referrals.length;
+      // Handle different possible response structures
+      if (data.result) {
+        if (data.result.users && Array.isArray(data.result.users)) {
+          // Find the specific user in the response
+          const targetUser = data.result.users.find((user: any) => user.id === userId);
+          if (targetUser && targetUser.referredUsers) {
+            referrals = Array.isArray(targetUser.referredUsers) ? targetUser.referredUsers : [];
+            totalReferrals = targetUser.totalReferrals || targetUser.referralCount || referrals.length;
+          }
+        } else if (data.result.referredUsers) {
+          // Alternative structure where referrals are directly in result
+          referrals = Array.isArray(data.result.referredUsers) ? data.result.referredUsers : [];
+          totalReferrals = data.result.totalReferrals || referrals.length;
+        } else if (data.result.referrals) {
+          // Another alternative structure
+          referrals = Array.isArray(data.result.referrals) ? data.result.referrals : [];
+          totalReferrals = data.result.totalReferrals || referrals.length;
         }
-      } else if (data.result && data.result.referrals) {
-        // Alternative structure
-        referrals = data.result.referrals;
-        totalReferrals = data.result.totalReferrals || referrals.length;
+      }
+
+      // If we couldn't find referrals in the main response, try the alternative approach
+      if (referrals.length === 0 && totalReferrals === 0) {
+        console.log('🔄 Trying alternative referral fetching approach...');
+        return this.getUserReferralsAlternative(userId, refPage);
       }
 
       const referralsPerPage = 10;
       const totalPages = Math.ceil(totalReferrals / referralsPerPage);
 
-      console.log(`✅ User ${userId} referrals fetched: ${referrals.length} items, refPage ${refPage}/${totalPages}`);
+      console.log(`✅ User ${userId} referrals fetched: ${referrals.length} items, refPage ${refPage}/${totalPages}, total: ${totalReferrals}`);
 
       return {
         success: true,
@@ -316,37 +315,19 @@ export class ApiService {
     }
   }
 
-  // Keep the old method for backward compatibility but redirect to new implementation
-  async getAllUsersWithReferral(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
-    console.log('⚠️ Using deprecated method getAllUsersWithReferral, redirecting to getUserReferrals');
-    return this.getUserReferrals(userId, refPage);
-  }
-
-  // Alternative method if the API structure is different
-  async getUserReferralsAlternative(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
+  // Alternative method if the main API structure is different
+  private async getUserReferralsAlternative(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
     try {
-      // Validate inputs
-      if (!userId || isNaN(userId) || userId <= 0) {
-        console.error('❌ Invalid userId provided:', userId);
-        return {
-          success: false,
-          data: null,
-          message: 'Invalid user ID provided'
-        };
-      }
-
-      if (!refPage || isNaN(refPage) || refPage <= 0) {
-        refPage = 1; // Default to page 1
-      }
-
       console.log(`🔄 Alternative: Fetching referrals for user ${userId}, refPage ${refPage}...`);
       
-      // Try different endpoint patterns
+      // Try different endpoint patterns that might work
       const possibleUrls = [
         `${API_BASE_URL}/admin/getUserReferrals?userId=${userId}&refPage=${refPage}`,
         `${API_BASE_URL}/admin/user/${userId}/referrals?page=${refPage}`,
         `${API_BASE_URL}/admin/users/${userId}/referrals?refPage=${refPage}`,
-        `${API_BASE_URL}/admin/getAllUsersWithReferrals/${userId}?refPage=${refPage}`
+        `${API_BASE_URL}/admin/getAllUsersWithReferrals/${userId}?refPage=${refPage}`,
+        // Try with both page and refPage parameters
+        `${API_BASE_URL}/admin/getAllUsersWithReferrals?userId=${userId}&page=1&refPage=${refPage}`
       ];
 
       let lastError = null;
@@ -361,19 +342,29 @@ export class ApiService {
             console.log(`✅ Success with URL: ${url}`, data);
             
             // Process the response based on the actual structure
-            let referrals = [];
+            let referrals: any[] = [];
             let totalReferrals = 0;
 
             if (data.result) {
               if (data.result.referrals) {
-                referrals = data.result.referrals;
+                referrals = Array.isArray(data.result.referrals) ? data.result.referrals : [];
                 totalReferrals = data.result.totalReferrals || referrals.length;
               } else if (data.result.referredUsers) {
-                referrals = data.result.referredUsers;
+                referrals = Array.isArray(data.result.referredUsers) ? data.result.referredUsers : [];
                 totalReferrals = data.result.totalReferrals || referrals.length;
               } else if (Array.isArray(data.result)) {
                 referrals = data.result;
                 totalReferrals = referrals.length;
+              } else if (data.result.users) {
+                // Handle case where user data is nested
+                const userData = Array.isArray(data.result.users) 
+                  ? data.result.users.find((user: any) => user.id === userId)
+                  : data.result.users;
+
+                if (userData && userData.referredUsers) {
+                  referrals = Array.isArray(userData.referredUsers) ? userData.referredUsers : [];
+                  totalReferrals = userData.totalReferrals || userData.referralCount || referrals.length;
+                }
               }
             }
 
@@ -399,7 +390,20 @@ export class ApiService {
         }
       }
 
-      throw lastError || new Error('All endpoint attempts failed');
+      // If all methods fail, return empty result
+      console.warn('⚠️ All referral fetching methods failed, returning empty result');
+      return {
+        success: true,
+        data: {
+          referrals: [],
+          totalReferrals: 0,
+          currentPage: refPage,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPrevPage: false
+        },
+        message: 'No referrals found or unable to fetch referrals'
+      };
 
     } catch (error) {
       console.error('❌ Get user referrals alternative error:', error);

@@ -1,4 +1,4 @@
-// Enhanced UserManagement.tsx - Improved Referral Pagination
+// Enhanced UserManagement.tsx - Fixed Referral Pagination
 import React, { useState, useEffect } from "react";
 import { Users, Award, AlertCircle, Loader } from "lucide-react";
 import { apiService } from "../../../services/apiService";
@@ -24,7 +24,7 @@ const UserManagement: React.FC = () => {
   // Enhanced state management for referral pagination
   const [userTotalReferralPages, setUserTotalReferralPages] = useState<Map<number, number>>(new Map());
   const [userReferralPages, setUserReferralPages] = useState<Map<number, number>>(new Map());
- 
+  const [loadingReferrals, setLoadingReferrals] = useState<Map<number, boolean>>(new Map());
 
   // Fetch users data using your API service
   const fetchUsersData = async (page: number = 1) => {
@@ -48,17 +48,9 @@ const UserManagement: React.FC = () => {
             hasCompletedBoth: user.hasCompletedBoth,
             rewardEarned: user.rewardEarned,
             rewardStatus: user.rewardStatus,
-            referrals: user.referredUsers
-              ? user.referredUsers.map((referred: any) => ({
-                  id: referred.id,
-                  walletAddress: referred.walletAddress,
-                  socialTasksCompleted: referred.socialTasksCompleted,
-                  referralTasksCompleted: referred.referralTasksCompleted,
-                  hasCompletedBoth: referred.hasCompletedBoth,
-                  rewardEarned: referred.rewardEarned,
-                  rewardStatus: referred.rewardStatus,
-                }))
-              : [],
+            // CRITICAL: Always start with empty referrals array
+            referrals: [],
+            // Get referral count but don't load the actual referrals yet
             referralCount: user.referredUsers ? user.referredUsers.length : 0,
           }));
 
@@ -69,9 +61,9 @@ const UserManagement: React.FC = () => {
             totalUsers,
             totalReferralTokensEarned,
             usersCount: mappedUsers.length,
-            mappedUsers,
             page,
             totalPages,
+            note: "Referrals arrays are empty - they will be loaded on demand"
           });
 
           setTotalUsers(totalUsers);
@@ -96,58 +88,88 @@ const UserManagement: React.FC = () => {
   };
 
   // Enhanced referral fetching with better error handling and loading states
- const fetchUserReferrals = async (userId: number, refPage: number = 1) => {
-  try {
-    console.log(`🔄 UserManagement: Fetching referrals for user ${userId}, refPage ${refPage}...`);
+  const fetchUserReferrals = async (userId: number, refPage: number = 1) => {
+    try {
+      console.log(`🔄 UserManagement: Fetching referrals for user ${userId}, refPage ${refPage}...`);
 
-    if (!userId || isNaN(userId)) {
-      console.error("❌ Invalid userId provided:", userId);
-      return;
-    }
+      if (!userId || isNaN(userId)) {
+        console.error("❌ Invalid userId provided:", userId);
+        return;
+      }
 
-    // Set loading state for this specific user
-    // Make API call with both page and refPage parameters
-    const response = await apiService.getAllUsersWithReferral(userId, refPage);
+      // Set loading state for this specific user
+      setLoadingReferrals(prev => new Map(prev).set(userId, true));
 
-    console.log("📋 Referrals response:", response);
+      // Make API call with both page and refPage parameters
+      const response = await apiService.getAllUsersWithReferral(userId, refPage);
 
-    if (response.success && response.data) {
-      // Update the specific user's referrals
+      console.log("📋 Referrals response:", response);
+
+      if (response.success && response.data) {
+        // Update the specific user's referrals
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === userId
+              ? {
+                  ...user,
+                  referrals: response.data!.referrals.map((referred: any) => ({
+                    id: referred.id,
+                    walletAddress: referred.walletAddress,
+                    socialTasksCompleted: referred.socialTasksCompleted,
+                    referralTasksCompleted: referred.referralTasksCompleted,
+                    hasCompletedBoth: referred.hasCompletedBoth,
+                    rewardEarned: referred.rewardEarned,
+                    rewardStatus: referred.rewardStatus,
+                  })),
+                }
+              : user
+          )
+        );
+
+        // Calculate and store total referral pages for this user
+        const totalReferrals = response.data.totalReferrals || 0;
+        const totalPages = Math.ceil(totalReferrals / referralsPerPage);
+        
+        setUserTotalReferralPages((prev) => new Map(prev).set(userId, totalPages));
+        setUserReferralPages((prev) => new Map(prev).set(userId, refPage));
+
+        console.log(`✅ Updated user ${userId} referrals: ${response.data.referrals.length} items, refPage: ${refPage}, totalPages: ${totalPages}`);
+      } else {
+        console.error("❌ Failed to fetch user referrals:", response.message);
+        // Show empty state if no referrals found
+        setUsers((prevUsers) =>
+          prevUsers.map((user) =>
+            user.id === userId
+              ? {
+                  ...user,
+                  referrals: [],
+                }
+              : user
+          )
+        );
+      }
+    } catch (err) {
+      console.error("❌ Error fetching user referrals:", err);
+      // Set empty referrals on error
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === userId
             ? {
                 ...user,
-                referrals: response.data!.referrals.map((referred: any) => ({
-                  id: referred.id,
-                  walletAddress: referred.walletAddress,
-                  socialTasksCompleted: referred.socialTasksCompleted,
-                  referralTasksCompleted: referred.referralTasksCompleted,
-                  hasCompletedBoth: referred.hasCompletedBoth,
-                  rewardEarned: referred.rewardEarned,
-                  rewardStatus: referred.rewardStatus,
-                })),
+                referrals: [],
               }
             : user
         )
       );
-
-      // Calculate and store total referral pages for this user
-      const totalReferrals = response.data.totalReferrals || 0;
-      const totalPages = Math.ceil(totalReferrals / referralsPerPage);
-      
-      setUserTotalReferralPages((prev) => new Map(prev).set(userId, totalPages));
-      setUserReferralPages((prev) => new Map(prev).set(userId, refPage));
-
-      console.log(`✅ Updated user ${userId} referrals: ${response.data.referrals.length} items, refPage: ${refPage}, totalPages: ${totalPages}`);
-    } else {
-      console.error("❌ Failed to fetch user referrals:", response.message);
+    } finally {
+      // Clear loading state for this user
+      setLoadingReferrals(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(userId);
+        return newMap;
+      });
     }
-  } catch (err) {
-    console.error("❌ Error fetching user referrals:", err);
-  } 
-};
-
+  };
 
   useEffect(() => {
     fetchUsersData(currentPage);
@@ -172,23 +194,36 @@ const UserManagement: React.FC = () => {
         newMap.delete(userId);
         return newMap;
       });
+      setUserTotalReferralPages(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(userId);
+        return newMap;
+      });
+      // Clear the referrals from the user data
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user.id === userId ? { ...user, referrals: [] } : user
+        )
+      );
     } else {
       // Expanding - add user and fetch first page of referrals
       newExpanded.add(userId);
-      // Reset to page 1 when expanding
+      // Reset to page 1 when expanding and immediately fetch referrals
       setUserReferralPages(prev => new Map(prev).set(userId, 1));
       fetchUserReferrals(userId, 1);
     }
     setExpandedUsers(newExpanded);
   };
 
- 
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     setExpandedUsers(new Set()); // Clear expanded users when changing main page
     setUserReferralPages(new Map()); // Clear referral pages when changing main page
     setUserTotalReferralPages(new Map()); // Clear total referral pages
+    // Clear all referrals from users when changing main page
+    setUsers(prevUsers =>
+      prevUsers.map(user => ({ ...user, referrals: [] }))
+    );
   };
 
   // Enhanced referral page change handler
@@ -246,28 +281,6 @@ const UserManagement: React.FC = () => {
           <h1 className="text-3xl font-bold text-white">User Management</h1>
           <p className="text-gray-400 mt-2">Monitor and manage user accounts and referral activities</p>
         </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatsCard
-          title="Total Users"
-          value={totalUsers.toLocaleString()}
-          icon={<Users className="w-6 h-6 text-[#00FFA9]" />}
-          loading={loading}
-        />
-        <StatsCard
-          title="Total Referral Rewards"
-          value={totalReferralTokensEarned.toLocaleString()}
-          icon={<Award className="w-6 h-6 text-[#00FFA9]" />}
-          loading={loading}
-        />
-        <StatsCard
-          title="Active Referrals"
-          value={users.reduce((acc, user) => acc + (user.referralCount || 0), 0)}
-          icon={<Users className="w-6 h-6 text-[#00FFA9]" />}
-          loading={loading}
-        />
       </div>
 
       {/* Search and Filter */}
@@ -397,6 +410,7 @@ const UserManagement: React.FC = () => {
                     currentRefPage={userReferralPages.get(user.id) || 1}
                     onRefPageChange={handleReferralPageChange}
                     totalReferralPages={userTotalReferralPages.get(user.id) || 0}
+                    isLoadingReferrals={loadingReferrals.get(user.id) || false}
                   />
                 ))}
               </tbody>

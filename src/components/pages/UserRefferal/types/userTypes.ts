@@ -28,3 +28,14 @@ export interface ApiResponse {
   };
   message?: string;
 }
+
+export interface UserRowProps {
+  user: User;
+  onToggleExpand: (userId: number) => void;
+  isExpanded: boolean;
+  referralsPerPage?: number;
+  currentRefPage?: number;
+  onRefPageChange?: (userId: number, page: number) => void;
+  totalReferralPages?: number;
+  isLoadingReferrals?: boolean;
+}
