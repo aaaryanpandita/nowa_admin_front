@@ -98,7 +98,7 @@ export const UserRow: React.FC<UserRowProps> = ({
     return (
       <div className="flex items-center space-x-1 justify-center">
         <div className={getPlatformColor()}>{getIcon()}</div>
-        <span className="text-white text-sm font-mono max-w-20 truncate" title={`@${username}`}>
+        <span className="text-white text-sm font-mono max-w-20 " title={`@${username}`}>
           @{username}
         </span>
       </div>

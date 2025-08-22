@@ -111,7 +111,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           {/* Task Link */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Task Link (Optional)
+              Task Link 
             </label>
             <input
               type="url"
