@@ -1,5 +1,6 @@
-// services/apiService.ts - Fixed for proper dynamic pagination
+// services/apiService.ts - Enhanced with getReferredUsers method
 const API_BASE_URL = 'https://nowa-ref-api.tarality.io/api/v1';
+// const API_BASE_URL = 'http://172.16.16.206:8083/api/v1';
 
 interface LoginCredentials {
   email: string;
@@ -22,7 +23,9 @@ interface DashboardData {
     totalUsers: number;
     totalReferralTokensEarned: number;
     users: any[];
-    referredUsers: string;
+    referredUsers?: string;
+     totalReferred: number;
+    totalPages?: number; // Add totalPages support
   };
 }
 
@@ -78,16 +81,18 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-// Enhanced interface for user referrals response
-interface UserReferralsResponse {
+// Enhanced interface for user referrals response (specific to getReferredUsers endpoint)
+interface GetReferredUsersResponse {
   success: boolean;
   data?: {
     referrals: any[];
-    totalReferrals: number;
-    currentPage: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      totalReferrals: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
   } | null;
   message?: string;
 }
@@ -187,10 +192,10 @@ export class ApiService {
     }
   }
 
-  // Main method to get all users with referrals (for main pagination)
-  async getAllUsersWithReferrals(page: number = 1): Promise<ApiResponse<DashboardData>> {
+  // Enhanced method to get all users (main page list) - simplified to not handle referrals
+  async getAllUsers(page: number = 1): Promise<ApiResponse<DashboardData>> {
     try {
-      const url = `${API_BASE_URL}/admin/getAllUsersWithReferrals?page=${page}`;
+      const url = `${API_BASE_URL}/admin/getAllUsers?page=${page}`;
       console.log(`🔄 Fetching users data: ${url}`);
       
       const response = await this.authenticatedFetch(url);
@@ -198,12 +203,13 @@ export class ApiService {
       console.log("📋 Main users response:", data);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch dashboard data');
+        throw new Error(data.message || 'Failed to fetch users data');
       }
 
-      const { totalUsers, totalReferralTokensEarned, users, referredUsers } = data.result;
+      const { totalUsers, totalReferralTokensEarned, users, totalReferred } = data.result;
       
       console.log("📊 Users count:", data.result.users?.length || 0);
+      console.log("📄 Page:", page);
 
       return {
         success: true,
@@ -211,13 +217,14 @@ export class ApiService {
           result: {
             totalUsers,
             totalReferralTokensEarned,
-            referredUsers,
-            users: users || []
+            totalReferred,
+            users: users || [],
+            totalPages: data.result.totalPages
           }
         }
       };
     } catch (error) {
-      console.error('❌ Dashboard data fetch error:', error);
+      console.error('❌ Users data fetch error:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Network error occurred'
@@ -225,195 +232,125 @@ export class ApiService {
     }
   }
 
-  // Enhanced method specifically for getting user referrals with pagination
-  async getAllUsersWithReferral(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
-    try {
-      // Validate inputs
-      if (!userId || isNaN(userId) || userId <= 0) {
-        console.error('❌ Invalid userId provided:', userId);
-        return {
-          success: false,
-          data: null,
-          message: 'Invalid user ID provided'
-        };
-      }
-
-      if (!refPage || isNaN(refPage) || refPage <= 0) {
-        console.error('❌ Invalid refPage provided:', refPage);
-        refPage = 1; // Default to page 1
-      }
-
-      console.log(`🔄 Fetching referrals for user ${userId}, refPage ${refPage}...`);
-      
-      // Use the specific endpoint for referral pagination
-      const url = `${API_BASE_URL}/admin/getAllUsersWithReferrals?page=1&refPage=${refPage}`;
-      console.log(`📍 API URL: ${url}`);
-      
-      const response = await this.authenticatedFetch(url);
-      const data = await response.json();
-      
-      console.log(`📋 User ${userId} referrals response (refPage ${refPage}):`, data);
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch user referrals');
-      }
-
-      // Extract referral data from response
-      let referrals: any[] = [];
-      let totalReferrals = 0;
-
-      // Handle different possible response structures
-      if (data.result) {
-        if (data.result.users && Array.isArray(data.result.users)) {
-          // Find the specific user in the response
-          const targetUser = data.result.users.find((user: any) => user.id === userId);
-          if (targetUser && targetUser.referredUsers) {
-            referrals = Array.isArray(targetUser.referredUsers) ? targetUser.referredUsers : [];
-            totalReferrals = targetUser.totalReferrals || targetUser.referralCount || referrals.length;
-          }
-        } else if (data.result.referredUsers) {
-          // Alternative structure where referrals are directly in result
-          referrals = Array.isArray(data.result.referredUsers) ? data.result.referredUsers : [];
-          totalReferrals = data.result.totalReferrals || referrals.length;
-        } else if (data.result.referrals) {
-          // Another alternative structure
-          referrals = Array.isArray(data.result.referrals) ? data.result.referrals : [];
-          totalReferrals = data.result.totalReferrals || referrals.length;
-        }
-      }
-
-      // If we couldn't find referrals in the main response, try the alternative approach
-      if (referrals.length === 0 && totalReferrals === 0) {
-        console.log('🔄 Trying alternative referral fetching approach...');
-        return this.getUserReferralsAlternative(userId, refPage);
-      }
-
-      const referralsPerPage = 10;
-      const totalPages = Math.ceil(totalReferrals / referralsPerPage);
-
-      console.log(`✅ User ${userId} referrals fetched: ${referrals.length} items, refPage ${refPage}/${totalPages}, total: ${totalReferrals}`);
-
-      return {
-        success: true,
-        data: {
-          referrals: referrals,
-          totalReferrals: totalReferrals,
-          currentPage: refPage,
-          totalPages: totalPages,
-          hasNextPage: refPage < totalPages,
-          hasPrevPage: refPage > 1
-        },
-        message: data.message
-      };
-    } catch (error) {
-      console.error('❌ Get user referrals error:', error);
+  // NEW METHOD: Get referrals for a specific user using dedicated endpoint
+// Fixed getReferredUsers method in apiService.ts
+async getReferredUsers(
+  userAddress: string, 
+  page: number = 1, 
+  limit: number = 10
+): Promise<GetReferredUsersResponse> {
+  try {
+    // Validate inputs
+    if (!userAddress || userAddress.trim() === "") {
+      console.error('❌ Invalid userAddress provided:', userAddress);
       return {
         success: false,
         data: null,
-        message: error instanceof Error ? error.message : 'Network error occurred'
+        message: 'Invalid user address provided'
       };
     }
-  }
 
-  // Alternative method if the main API structure is different
-  private async getUserReferralsAlternative(userId: number, refPage: number = 1): Promise<UserReferralsResponse> {
-    try {
-      console.log(`🔄 Alternative: Fetching referrals for user ${userId}, refPage ${refPage}...`);
+    // CRITICAL FIX: Ensure we're using the FULL address without any truncation
+    const fullAddress = userAddress.trim();
+
+    console.log("the address of user is ", fullAddress)
+    
+    console.log(`🔍 FULL wallet address being used: "${fullAddress}" (length: ${fullAddress.length})`);
+
+    if (!page || isNaN(page) || page <= 0) {
+      console.error('❌ Invalid page provided:', page);
+      page = 1; // Default to page 1
+    }
+
+    console.log(`🔄 Fetching referrals for user ${fullAddress}, page ${page}, limit ${limit}...`);
+    
+    // Use dedicated endpoint for getting user referrals - ENCODE THE ADDRESS PROPERLY
+    const encodedAddress = encodeURIComponent(fullAddress);
+    const url = `${API_BASE_URL}/admin/getReferredUsers/${encodedAddress}?page=${page}&limit=${limit}`;
+    console.log(`📍 API URL: ${url}`);
+    console.log("the add is", encodedAddress)
+    
+    const response = await this.authenticatedFetch(url);
+    const data = await response.json();
+    
+    console.log(`📋 User ${fullAddress} referrals response (page ${page}):`, data);
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch user referrals');
+    }
+
+    // Extract referral data from dedicated endpoint response
+    let referrals: any[] = [];
+    let pagination = {
+      currentPage: page,
+      totalPages: 0,
+      totalReferrals: 0,
+      hasNextPage: false,
+      hasPrevPage: false
+    };
+
+    console.log(data.result)
+    console.log(data.responseCode)
+
+    if (data.responseCode == 200 && data.result) {
+      referrals = Array.isArray(data.result.referredUsers) ? data.result.referredUsers : [];
       
-      // Try different endpoint patterns that might work
-      const possibleUrls = [
-        `${API_BASE_URL}/admin/getUserReferrals?userId=${userId}&refPage=${refPage}`,
-        `${API_BASE_URL}/admin/user/${userId}/referrals?page=${refPage}`,
-        `${API_BASE_URL}/admin/users/${userId}/referrals?refPage=${refPage}`,
-        `${API_BASE_URL}/admin/getAllUsersWithReferrals/${userId}?refPage=${refPage}`,
-        // Try with both page and refPage parameters
-        `${API_BASE_URL}/admin/getAllUsersWithReferrals?userId=${userId}&page=1&refPage=${refPage}`
-      ];
+      // FIXED: Use API pagination data directly instead of overriding it
+      pagination = {
+        currentPage: data.result.currentPage || page,
+        totalPages: data.result.totalPages || 0,
+        totalReferrals: data.result.totalReferred || 0,
+        hasNextPage: (data.result.currentPage || page) < (data.result.totalPages || 0),
+        hasPrevPage: (data.result.currentPage || page) > 1
+      };
 
-      let lastError = null;
-
-      for (const url of possibleUrls) {
-        try {
-          console.log(`🔄 Trying URL: ${url}`);
-          const response = await this.authenticatedFetch(url);
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log(`✅ Success with URL: ${url}`, data);
-            
-            // Process the response based on the actual structure
-            let referrals: any[] = [];
-            let totalReferrals = 0;
-
-            if (data.result) {
-              if (data.result.referrals) {
-                referrals = Array.isArray(data.result.referrals) ? data.result.referrals : [];
-                totalReferrals = data.result.totalReferrals || referrals.length;
-              } else if (data.result.referredUsers) {
-                referrals = Array.isArray(data.result.referredUsers) ? data.result.referredUsers : [];
-                totalReferrals = data.result.totalReferrals || referrals.length;
-              } else if (Array.isArray(data.result)) {
-                referrals = data.result;
-                totalReferrals = referrals.length;
-              } else if (data.result.users) {
-                // Handle case where user data is nested
-                const userData = Array.isArray(data.result.users) 
-                  ? data.result.users.find((user: any) => user.id === userId)
-                  : data.result.users;
-
-                if (userData && userData.referredUsers) {
-                  referrals = Array.isArray(userData.referredUsers) ? userData.referredUsers : [];
-                  totalReferrals = userData.totalReferrals || userData.referralCount || referrals.length;
-                }
-              }
-            }
-
-            const referralsPerPage = 10;
-            const totalPages = Math.ceil(totalReferrals / referralsPerPage);
-
-            return {
-              success: true,
-              data: {
-                referrals: referrals,
-                totalReferrals: totalReferrals,
-                currentPage: refPage,
-                totalPages: totalPages,
-                hasNextPage: refPage < totalPages,
-                hasPrevPage: refPage > 1
-              },
-              message: data.message
-            };
-          }
-        } catch (error) {
-          lastError = error;
-          console.log(`❌ Failed with URL: ${url}`, error);
-        }
+      console.log(`✅ User ${fullAddress} referrals found:`, {
+        referralsCount: referrals.length,
+        ...pagination
+      });
+    } else {
+      console.warn(`⚠️ No referral data found for user ${fullAddress}`);
+      
+      // Check if the API response indicates the user was not found
+      if (data.message && (
+        data.message.toLowerCase().includes('not found') ||
+        data.message.toLowerCase().includes('no referrals') ||
+        data.responseCode === 404
+      )) {
+        console.log(`📝 User ${fullAddress} has no referrals or was not found in the system`);
       }
-
-      // If all methods fail, return empty result
-      console.warn('⚠️ All referral fetching methods failed, returning empty result');
-      return {
-        success: true,
-        data: {
-          referrals: [],
-          totalReferrals: 0,
-          currentPage: refPage,
-          totalPages: 0,
-          hasNextPage: false,
-          hasPrevPage: false
-        },
-        message: 'No referrals found or unable to fetch referrals'
-      };
-
-    } catch (error) {
-      console.error('❌ Get user referrals alternative error:', error);
-      return {
-        success: false,
-        data: null,
-        message: error instanceof Error ? error.message : 'Network error occurred'
-      };
     }
+
+    return {
+      success: true,
+      data: {
+        referrals,
+        pagination
+      },
+      message: data.message
+    };
+  } catch (error) {
+    console.error('❌ Get user referrals error:', error);
+    
+    // Additional error logging for debugging
+    if (error instanceof Error) {
+      console.error('❌ Error details:', {
+        message: error.message,
+        userAddress,
+        page,
+        limit
+      });
+    }
+    
+    return {
+      success: false,
+      data: null,
+      message: error instanceof Error ? error.message : 'Network error occurred'
+    };
   }
+}
+
+
 
   // New method to add referral reward
   async addReferralReward(refferedreward: number, id?: number): Promise<ReferralRewardResponse> {
@@ -620,5 +557,5 @@ export type {
   TasksResponse, 
   ReferralReward, 
   GetReferralRewardResponse,
-  UserReferralsResponse 
+  GetReferredUsersResponse
 };

@@ -21,23 +21,23 @@ const MetricCard: React.FC<MetricCardProps> = ({
   isLoading 
 }) => {
   return (
-    <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6 backdrop-blur-sm">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-12 h-12 bg-gradient-to-r ${color} rounded-xl flex items-center justify-center`}>
-          <Icon className="w-6 h-6 text-white" />
+    <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-4 sm:p-6 backdrop-blur-sm">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${color} rounded-xl flex items-center justify-center`}>
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
         </div>
         
       </div>
       
       {isLoading ? (
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-600 rounded mb-2"></div>
-          <div className="h-4 bg-gray-600 rounded w-24"></div>
+          <div className="h-6 sm:h-8 bg-gray-600 rounded mb-2"></div>
+          <div className="h-3 sm:h-4 bg-gray-600 rounded w-20 sm:w-24"></div>
         </div>
       ) : (
         <>
-          <h3 className="text-2xl font-bold text-white mb-1">{value}</h3>
-          <p className="text-gray-400 text-sm">{title}</p>
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-1">{value}</h3>
+          <p className="text-gray-400 text-xs sm:text-sm">{title}</p>
         </>
       )}
     </div>
@@ -61,7 +61,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
       setIsLoading(true);
       setError(null);
       
-      const response = await apiService.getAllUsersWithReferrals();
+      const response = await apiService.getAllUsers();
 
       if (response.success && response.data) {
         // Destructure the 'result' object
@@ -118,15 +118,15 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
 
   if (error && !isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
-        <div className="col-span-2 bg-red-900/20 border border-red-700/50 rounded-2xl p-6 backdrop-blur-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+        <div className="col-span-1 sm:col-span-2 bg-red-900/20 border border-red-700/50 rounded-2xl p-4 sm:p-6 backdrop-blur-sm">
           <div className="text-center">
-            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-            <p className="text-red-400 mb-2">Failed to load dashboard metrics</p>
-            <p className="text-gray-400 text-sm mb-4">{error}</p>
+            <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-400 mx-auto mb-3" />
+            <p className="text-red-400 mb-2 text-sm sm:text-base">Failed to load dashboard metrics</p>
+            <p className="text-gray-400 text-xs sm:text-sm mb-4">{error}</p>
             <button 
               onClick={fetchDashboardData}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              className="px-3 py-2 sm:px-4 sm:py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm sm:text-base"
             >
               Retry
             </button>
@@ -138,7 +138,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
 
   // ADD THE MISSING RETURN STATEMENT HERE
   return (
-    <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <MetricCard
         title="Total Users"
         value={(dashboardData.totalUsers ?? 0).toString()}

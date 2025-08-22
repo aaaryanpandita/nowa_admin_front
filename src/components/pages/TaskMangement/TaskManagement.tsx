@@ -33,22 +33,52 @@ const TaskManagement: React.FC = () => {
     setIsEditing(false);
   };
 
-  const handleTaskChange = (field: string, value: string) => {
-    setNewTask((prev) => ({ ...prev, [field]: value }));
+  // Helper function to validate time
+  const validateTimeRange = (startTime: string, endTime: string): boolean => {
+    if (!startTime || !endTime) return true; // Skip validation if either time is empty
+    
+    // Convert time strings to minutes for comparison
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
+    
+    return endTotalMinutes > startTotalMinutes;
   };
 
-const handleAddTask = async () => {
-  if (!newTask.title.trim() || !newTask.description.trim()) {
-    setError('Task title and description are required');
-    return;
-  }
-  const success = isEditing ? await updateTask(newTask) : await addTask(newTask);
-  if (success) {
-    resetForm();
-    setShowAddTask(false);
-  }
-};
+  const handleTaskChange = (field: string, value: string) => {
+    setNewTask((prev) => {
+      const updated = { ...prev, [field]: value };
+      
+      // Clear any existing time validation error when user changes time
+      if ((field === 'startTime' || field === 'endTime') && error && error.includes('End time must be greater than start time')) {
+        setError(null);
+      }
+      
+      return updated;
+    });
+  };
 
+  const handleAddTask = async () => {
+    // Basic validation
+    if (!newTask.title.trim() || !newTask.description.trim()) {
+      setError('Task title and description are required');
+      return;
+    }
+
+    // Time validation
+    if (!validateTimeRange(newTask.startTime, newTask.endTime)) {
+      setError('End time must be greater than start time');
+      return;
+    }
+
+    const success = isEditing ? await updateTask(newTask) : await addTask(newTask);
+    if (success) {
+      resetForm();
+      setShowAddTask(false);
+    }
+  };
 
   const handleEditTask = (task: DailyTask) => {
     setNewTask({
@@ -63,8 +93,6 @@ const handleAddTask = async () => {
     setIsEditing(true);
     setShowAddTask(true);
   };
-
-
 
   const handleCloseModal = () => {
     setShowAddTask(false);
