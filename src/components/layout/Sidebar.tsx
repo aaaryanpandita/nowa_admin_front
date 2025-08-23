@@ -63,8 +63,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) 
       } md:translate-x-0 fixed md:relative z-40 w-64 md:w-16 lg:w-52 xl:w-64 2xl:w-72 bg-gray-800 border-r border-gray-700 flex flex-col transition-all duration-300 h-full`}>
       <div className="p-4 md:p-2 lg:p-4 xl:p-6 border-b border-gray-700">
         <div className="flex items-center space-x-3 md:space-x-0 lg:space-x-2 xl:space-x-3">
-          <div className="w-10 h-10 md:w-8 md:h-8 lg:w-9 lg:h-9 xl:w-10 xl:h-10 bg-gradient-to-r from-[#00FFA9] to-[#00CC87] rounded-xl flex items-center justify-center">
-            <Coins className="w-6 h-6 md:w-4 md:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-black" />
+          <div className="w-10 h-10 md:w-8 md:h-8 lg:w-9 lg:h-9 xl:w-10 xl:h-10  flex items-center justify-center">
+            <img className="w-6 h-6 md:w-4 md:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6"  src='./onlyLogo.png'/>
           </div>
           <div className="block md:hidden lg:block">
             <h2 className="text-xl lg:text-lg xl:text-xl font-bold text-white">NowaAdmin</h2>

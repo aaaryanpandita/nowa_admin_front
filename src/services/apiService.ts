@@ -196,11 +196,11 @@ export class ApiService {
   async getAllUsers(page: number = 1): Promise<ApiResponse<DashboardData>> {
     try {
       const url = `${API_BASE_URL}/admin/getAllUsers?page=${page}`;
-      console.log(`🔄 Fetching users data: ${url}`);
+     
       
       const response = await this.authenticatedFetch(url);
       const data = await response.json();
-      console.log("📋 Main users response:", data);
+      
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch users data');
@@ -208,8 +208,6 @@ export class ApiService {
 
       const { totalUsers, totalReferralTokensEarned, users, totalReferred } = data.result;
       
-      console.log("📊 Users count:", data.result.users?.length || 0);
-      console.log("📄 Page:", page);
 
       return {
         success: true,
@@ -253,27 +251,24 @@ async getReferredUsers(
     // CRITICAL FIX: Ensure we're using the FULL address without any truncation
     const fullAddress = userAddress.trim();
 
-    console.log("the address of user is ", fullAddress)
-    
-    console.log(`🔍 FULL wallet address being used: "${fullAddress}" (length: ${fullAddress.length})`);
+  
 
     if (!page || isNaN(page) || page <= 0) {
       console.error('❌ Invalid page provided:', page);
       page = 1; // Default to page 1
     }
 
-    console.log(`🔄 Fetching referrals for user ${fullAddress}, page ${page}, limit ${limit}...`);
+   
     
     // Use dedicated endpoint for getting user referrals - ENCODE THE ADDRESS PROPERLY
     const encodedAddress = encodeURIComponent(fullAddress);
     const url = `${API_BASE_URL}/admin/getReferredUsers/${encodedAddress}?page=${page}&limit=${limit}`;
-    console.log(`📍 API URL: ${url}`);
-    console.log("the add is", encodedAddress)
+   
     
     const response = await this.authenticatedFetch(url);
     const data = await response.json();
     
-    console.log(`📋 User ${fullAddress} referrals response (page ${page}):`, data);
+    
     
     if (!response.ok) {
       throw new Error(data.message || 'Failed to fetch user referrals');
@@ -289,8 +284,7 @@ async getReferredUsers(
       hasPrevPage: false
     };
 
-    console.log(data.result)
-    console.log(data.responseCode)
+
 
     if (data.responseCode == 200 && data.result) {
       referrals = Array.isArray(data.result.referredUsers) ? data.result.referredUsers : [];
@@ -304,10 +298,10 @@ async getReferredUsers(
         hasPrevPage: (data.result.currentPage || page) > 1
       };
 
-      console.log(`✅ User ${fullAddress} referrals found:`, {
-        referralsCount: referrals.length,
-        ...pagination
-      });
+      // console.log(`✅ User ${fullAddress} referrals found:`, {
+      //   referralsCount: referrals.length,
+      //   ...pagination
+      // });
     } else {
       console.warn(`⚠️ No referral data found for user ${fullAddress}`);
       
@@ -358,7 +352,7 @@ async getReferredUsers(
       const payload: any = { refferedreward };
       if (id) payload.id = id;
 
-      console.log('🚀 Adding referral reward:', refferedreward);
+     
 
       const response = await this.authenticatedFetch(
         `${API_BASE_URL}/admin/addRefferalReward`,
@@ -369,7 +363,7 @@ async getReferredUsers(
       );
 
       const data = await response.json();
-      console.log('📤 Referral reward response:', data);
+     
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to add referral reward');
@@ -392,14 +386,14 @@ async getReferredUsers(
   // New method to get referral rewards (sorted by latest ID)
   async getReferralRewards(): Promise<GetReferralRewardResponse> {
     try {
-      console.log('🔄 Fetching referral rewards...');
+     
 
       const response = await this.authenticatedFetch(
         `${API_BASE_URL}/admin/getRefferalRewards`
       );
 
       const data = await response.json();
-      console.log('📋 Referral rewards response:', data);
+    
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch referral rewards');
@@ -430,7 +424,7 @@ async getReferredUsers(
       if (response.success && response.result && response.result.length > 0) {
         // Return the latest reward (first item after sorting)
         const latestReward = response.result[0];
-        console.log('💰 Latest referral reward:', latestReward.refferedreward);
+       
         return {
           success: true,
           reward: latestReward.refferedreward
@@ -454,14 +448,14 @@ async getReferredUsers(
   // Get all daily tasks
   async getDailyTasks(): Promise<TasksResponse> {
     try {
-      console.log('🔄 Fetching daily tasks...');
+      
 
       const response = await this.authenticatedFetch(
         `${API_BASE_URL}/admin/getDailyTasks`
       );
 
       const data = await response.json();
-      console.log('📋 Tasks response:', data);
+     
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch daily tasks');
@@ -484,13 +478,13 @@ async getReferredUsers(
   // Add daily task method
   async addDailyTask(taskData: CreateTaskPayload): Promise<TasksResponse> {
     try {
-      console.log('🚀 Adding or updating task(s):', taskData);
+
 
       // Extract the first task from the array for the API call
       const taskToSend = taskData.tasks[0];
       
       // Log what we're actually sending
-      console.log('📤 Sending task data:', taskToSend);
+
 
       const response = await this.authenticatedFetch(
         `${API_BASE_URL}/admin/addDailyTask`,
@@ -501,7 +495,7 @@ async getReferredUsers(
       );
 
       const data = await response.json();
-      console.log('📤 Add/Update task response:', data);
+      
 
       if (!response.ok) {
         throw new Error(data.message || data.responseMessage || 'Failed to add/update daily task');

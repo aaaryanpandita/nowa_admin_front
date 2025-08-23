@@ -11,14 +11,14 @@ export const useTaskManagement = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Fetching tasks...');
+     
       const response = await apiService.getDailyTasks();
       
-      console.log('📋 Full API response:', response);
+     
       
       if (response.success && response.result) {
         const tasksArray = response.result.tasks || [];
-        console.log('✅ Setting tasks:', tasksArray);
+        
         setTasks(tasksArray);
       } else {
         console.error('❌ API returned error:', response.message);
@@ -76,12 +76,11 @@ export const useTaskManagement = () => {
         tasks: [cleanTask]
       };
 
-      console.log('📤 Sending add task payload:', taskPayload);
-
+  
       const response = await apiService.addDailyTask(taskPayload);
 
       if (response.success) {
-        console.log('✅ Task added successfully');
+        
         await fetchTasks();
         return true;
       } else {
@@ -147,12 +146,12 @@ export const useTaskManagement = () => {
         tasks: [cleanTask]
       };
 
-      console.log('📤 Sending update task payload:', taskPayload);
+      
 
       const response = await apiService.addDailyTask(taskPayload);
 
       if (response.success) {
-        console.log('✅ Task updated successfully');
+       
         await fetchTasks();
         return true;
       } else {

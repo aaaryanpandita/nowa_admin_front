@@ -24,14 +24,14 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
   const fetchLatestReferralReward = async () => {
     try {
       setIsFetchingReward(true);
-      console.log('🔄 Fetching latest referral reward...');
+     
       
       const response = await apiService.getReferralRewards();
       
       if (response.success && response.result && response.result.length > 0) {
         // Get the latest reward (highest ID)
         const latestReward = response.result[0];
-        console.log('💰 Setting referral reward to:', latestReward.refferedreward);
+       
         
         // Update BOTH states - this is the key fix
         setCurrentReferralReward(latestReward.refferedreward.toString());

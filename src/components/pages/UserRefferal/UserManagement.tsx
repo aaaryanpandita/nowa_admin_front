@@ -45,7 +45,7 @@ const UserManagement: React.FC = () => {
     setIsSearchMode(true);
     
     try {
-      console.log(`🔍 Starting smart search for: "${searchQuery}"`);
+      
       
       const searchResults: User[] = [];
       let searchPage = 1;
@@ -53,7 +53,7 @@ const UserManagement: React.FC = () => {
 
       // Search page by page, stop when results are found
       while (searchPage <= totalPagesFound) {
-        console.log(`🔍 Searching page ${searchPage}...`);
+        
         
         const response = await apiService.getAllUsers(searchPage);
         
@@ -89,7 +89,7 @@ const UserManagement: React.FC = () => {
 
             if (matchingUsers.length > 0) {
               searchResults.push(...matchingUsers);
-              console.log(`✅ Found ${matchingUsers.length} matching user(s) on page ${searchPage} - STOPPING SEARCH`);
+
               break; // STOP as soon as we find results
             }
           }
@@ -142,7 +142,7 @@ const UserManagement: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      console.log(`🔄 Fetching users data from getAllUsers?page=${page}...`);
+      
 
       const response = await apiService.getAllUsers(page);
 
@@ -173,13 +173,13 @@ const UserManagement: React.FC = () => {
 
           const calculatedTotalPages = apiTotalPages || Math.ceil(totalUsers / itemsPerPage);
 
-          console.log("✅ Users data fetched successfully:", {
-            totalUsers,
-            totalReferralTokensEarned,
-            usersCount: mappedUsers.length,
-            page,
-            totalPages: calculatedTotalPages,
-          });
+          // console.log("✅ Users data fetched successfully:", {
+          //   totalUsers,
+          //   totalReferralTokensEarned,
+          //   usersCount: mappedUsers.length,
+          //   page,
+          //   totalPages: calculatedTotalPages,
+          // });
 
           setTotalUsers(totalUsers);
           setTotalReferralTokensEarned(totalReferralTokensEarned);
@@ -204,7 +204,7 @@ const UserManagement: React.FC = () => {
 
   // Optimized referral fetching
   const fetchUserReferrals = useCallback(async (userId: number, refPage: number = 1) => {
-    console.log(`Fetching referrals for user ID ${userId}, page ${refPage}`);
+    
 
     const currentUserList = isSearchMode ? searchResults : users;
     const user = currentUserList.find((u) => u.id === userId);
@@ -310,7 +310,7 @@ const UserManagement: React.FC = () => {
 
   // Optimized expand handler
   const handleToggleExpand = useCallback((userId: number) => {
-    console.log(`🔄 Toggling expand for user ID ${userId}`);
+
 
     setExpandedUsers((prev) => {
       const newExpanded = new Set(prev);
@@ -351,7 +351,7 @@ const UserManagement: React.FC = () => {
 
   // Optimized referral page change handler
   const handleReferralPageChange = useCallback((userId: number, refPage: number) => {
-    console.log(`🔄 Handling referral page change: User ID ${userId}, RefPage ${refPage}`);
+   
 
     setUserReferralPagination((prev) => {
       const currentPagination = prev.get(userId);
