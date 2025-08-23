@@ -213,7 +213,7 @@ const TaskManagement: React.FC = () => {
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         title="Delete Task"
-        message={`Are you sure you want to delete "${deleteConfirmation.taskTitle}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         isLoading={deletingTask}

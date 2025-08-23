@@ -102,9 +102,9 @@ const SocialMediaDisplay: React.FC<{
       <div className={getPlatformColor()}>{getIcon()}</div>
       <span 
         className="text-white text-sm font-mono max-w-20 truncate" 
-        title={`@${username}`}
+        title={`${username}`}
       >
-        @{displayName}
+        {displayName}
       </span>
       <CopyButton text={username} size="sm" className="opacity-0 group-hover:opacity-100" />
     </div>
@@ -232,14 +232,19 @@ const SocialMediaDisplay: React.FC<{
             )}
             <div className="min-w-0 flex-1">
               <p className="text-white font-medium text-sm lg:text-base font-mono break-all" title={user.walletAddress}>
-                <span className="hidden lg:inline">{user.walletAddress}</span>
-                <span className="lg:hidden">
-                  {user.walletAddress.length > 20
-                    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
-                    : user.walletAddress}
-                </span>
+                <span className="hidden lg:inline">
+  {user.walletAddress.length > 20
+    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
+    : user.walletAddress}
+</span>
+<span className="lg:hidden">
+  {user.walletAddress.length > 20
+    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-2)}`
+    : user.walletAddress}
+</span>
+ <CopyButton text={user.walletAddress} size="sm" />
               </p>
-              <CopyButton text={user.walletAddress} size="sm" />
+             
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 {!user.socialTasksCompleted && user.referralTasksCompleted && (
                   <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">
@@ -482,7 +487,7 @@ const SocialMediaDisplay: React.FC<{
             currentReferrals.map((referral, index) => (
               <tr
                 key={`referral-${user.id}-${referral.id}-${index}`}
-                className="border-b border-gray-700/20 bg-gray-800/10 hover:bg-gray-700/20 transition-colors"
+                className="border-b border-gray-700/20 bg-gray-800/10 hover:bg-gray-700/20 transition-colors group"
               >
                 <td className="p-3">
                   <div className="flex items-center space-x-2">
@@ -491,12 +496,16 @@ const SocialMediaDisplay: React.FC<{
                       className="text-white text-sm font-mono break-all lg:break-normal"
                       title={referral.walletAddress}
                     >
-                      <span className="hidden lg:inline">{referral.walletAddress}</span>
-                      <span className="lg:hidden">
-                        {referral.walletAddress.length > 20
-                          ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-6)}`
-                          : referral.walletAddress}
-                      </span>
+                      <span className="hidden lg:inline">
+  {user.walletAddress.length > 20
+    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
+    : user.walletAddress}
+</span>
+<span className="lg:hidden">
+  {user.walletAddress.length > 20
+    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-2)}`
+    : user.walletAddress}
+</span>
                     </span>
                     <CopyButton text={referral.walletAddress} size="sm" className="opacity-0 group-hover:opacity-100" />
                   </div>

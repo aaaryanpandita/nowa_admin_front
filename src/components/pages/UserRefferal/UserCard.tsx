@@ -107,9 +107,9 @@ const SocialMediaDisplay: React.FC<{
       <div className={getPlatformColor()}>{getIcon()}</div>
       <span 
         className="text-white text-xs font-mono break-all max-w-[100px] sm:max-w-none truncate" 
-        title={`@${username}`}
+        title={`${username}`}
       >
-        @{displayName}
+        {displayName}
       </span>
       <CopyButton text={username} size="sm" className="opacity-0 group-hover:opacity-100" />
     </div>
@@ -401,6 +401,7 @@ const SocialMediaDisplay: React.FC<{
                     <span className="text-white text-sm font-mono break-all" title={referral.walletAddress}>
                       {referral.walletAddress}
                     </span>
+                     <CopyButton text={referral.walletAddress} size="sm" className="opacity-0 group-hover:opacity-100" />
                   </div>
 
                   {/* Referral Stats */}
