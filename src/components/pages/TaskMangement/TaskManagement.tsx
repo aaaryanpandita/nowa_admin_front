@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Plus, Loader2, AlertCircle, Calendar } from 'lucide-react';
 import TaskCard from './TaskCard';
 import AddTaskModal from './AddTaskModal';
@@ -10,6 +10,18 @@ const TaskManagement: React.FC = () => {
   const { tasks, loading, error, addingTask, addTask, updateTask, setError,deletingTask,deleteTask } = useTaskManagement();
 
   const [showAddTask, setShowAddTask] = useState(false);
+
+  
+
+  const [toast, setToast] = useState<{
+  isVisible: boolean;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}>({
+  isVisible: false,
+  message: '',
+  type: 'success'
+});
 
    const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
@@ -59,8 +71,18 @@ const TaskManagement: React.FC = () => {
     const success = await deleteTask(deleteConfirmation.taskId);
     if (success) {
       setDeleteConfirmation({ isOpen: false, taskId: null, taskTitle: '' });
+
+       setToast({
+      isVisible: true,
+      message: `Task deleted successfully!`,
+      type: 'success'
+    });
     }
   };
+
+  const handleToastClose = () => {
+  setToast(prev => ({ ...prev, isVisible: false }));
+};
 
   const handleDeleteCancel = () => {
     setDeleteConfirmation({ isOpen: false, taskId: null, taskTitle: '' });
@@ -132,6 +154,17 @@ const TaskManagement: React.FC = () => {
     setError(null);
     resetForm();
   };
+
+  // Add after your state declarations
+useEffect(() => {
+  if (toast.isVisible) {
+    const timer = setTimeout(() => {
+      handleToastClose();
+    }, 3000); // Auto-hide after 3 seconds
+
+    return () => clearTimeout(timer);
+  }
+}, [toast.isVisible]);
 
   if (loading) {
     return (
@@ -218,6 +251,32 @@ const TaskManagement: React.FC = () => {
         cancelText="Cancel"
         isLoading={deletingTask}
       />
+
+      {/* Success Toast */}
+{/* Success Toast */}
+{/* Success Toast */}
+{toast.isVisible && (
+  <div className="fixed top-4 right-4 z-50">
+    <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center space-x-3 min-w-[300px] shadow-lg animate-in slide-in-from-right-full duration-300">
+      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <div className="flex-1">
+        <p className="text-green-600 font-medium text-sm">{toast.message}</p>
+      </div>
+      <button 
+        onClick={handleToastClose}
+        className="text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 };
