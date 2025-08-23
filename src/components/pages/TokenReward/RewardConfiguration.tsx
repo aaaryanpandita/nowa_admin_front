@@ -70,7 +70,7 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
 
       if (response.success) {
         toast.success(response.message || 'Referral reward updated successfully!');
-        setSuccessMessage('Referral reward updated successfully!');
+        //setSuccessMessage('Referral reward updated successfully!');
         
         // Update current reward display after successful save
         setCurrentReferralReward(referralReward);
