@@ -167,7 +167,7 @@ export class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error(data.message || 'Invalid email or password');
       }
 
       // Store token in localStorage if login is successful

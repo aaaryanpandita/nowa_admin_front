@@ -118,7 +118,7 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
         className="flex items-center space-x-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         title="Refresh latest reward"
       >
-        <span className="hidden sm:inline">Reward: {currentReferralReward}</span>
+        <span className="hidden sm:inline">Reward: {currentReferralReward} NOWA</span>
       </button>
 
       <button
@@ -163,7 +163,7 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
   <div className="space-y-4">
     <div>
       <label className="block text-sm font-medium text-gray-300 mb-2">
-        Referral Reward Amount (USD)
+        Referral Reward Amount (NOWA)
       </label>
       <input
         type="number"
@@ -176,7 +176,7 @@ const RewardConfiguration: React.FC<RewardConfigurationProps> = ({ onSaveSuccess
         disabled={isLoading || isFetchingReward}
       />
       <p className="text-xs text-gray-500 mt-1">
-        Enter the amount in USD that users will receive for each referral
+        Enter the amount in NOWA that users will receive for each referral
       </p>
     </div>
 

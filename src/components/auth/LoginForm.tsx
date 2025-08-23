@@ -31,7 +31,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
       if (result.success) {
         onLoginSuccess();
       } else {
-        const errorMessage = result.message || 'Login failed';
+        const errorMessage = result.message || 'Invalid email or password';
         setError(errorMessage);
         onLoginError?.(errorMessage);
       }
@@ -68,7 +68,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full bg-gray-700/50 border border-gray-600 rounded-xl pl-11 pr-4 py-3 text-white placeholder-gray-400 focus:border-[#00FFA9] focus:ring-2 focus:ring-[#00FFA9]/25 transition-all duration-300"
-            placeholder="Email or Username"
+            placeholder="Email"
             required
             disabled={isLoading}
           />

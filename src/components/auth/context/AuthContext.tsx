@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       return { 
         success: false, 
-        message: error instanceof Error ? error.message : 'Login failed' 
+        message: error instanceof Error ? error.message : 'Invalid email or password' 
       };
     }
   };

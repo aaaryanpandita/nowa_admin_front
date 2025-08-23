@@ -13,7 +13,7 @@ interface LoginScreenProps {
 const LoginScreen: React.FC<LoginScreenProps> = ({ 
   onLogin,
   title = "Admin Portal",
-  subtitle = "Access your crypto dashboard",
+  subtitle = "Access your nowa dashboard",
   showDemoCredentials = true
 }) => {
   const handleLoginSuccess = () => {
@@ -24,7 +24,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({
 
   const handleLoginError = (error: string) => {
     // You can add additional error handling here
-    console.error('Login failed:', error);
+    console.error('Invalid email or password', error);
   };
 
   return (

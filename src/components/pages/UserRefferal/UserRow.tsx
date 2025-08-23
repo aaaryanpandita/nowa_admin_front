@@ -249,12 +249,7 @@ export const UserRow: React.FC<UserRowProps> = ({
             <span className="text-white font-medium">
               {user.referralCount || 0}
             </span>
-            {user.referralCount && user.referralCount > 0 && (
-              <span className="text-xs text-gray-400 hidden xl:inline">
-                ({user.referrals?.filter((r) => r.hasCompletedBoth).length || 0}{" "}
-                qualified)
-              </span>
-            )}
+            
           </div>
         </td>
         <td className="p-4 lg:p-6">
@@ -296,7 +291,7 @@ export const UserRow: React.FC<UserRowProps> = ({
             {formatDate(user.createdAt)}
           </span>
         </td>
-        <td className="p-4 lg:p-6 text-center">
+        <td className="p-4 lg:p-8 text-center">
           <SocialMediaDisplay
             username={user.instagramusername}
             platform="instagram"

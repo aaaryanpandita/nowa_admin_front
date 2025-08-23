@@ -8,7 +8,7 @@ interface MetricCardProps {
   value: string;
   change: string;
   trend: 'up' | 'down';
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<any> | string;
   color: string;
   isLoading?: boolean;
 }
@@ -16,15 +16,24 @@ interface MetricCardProps {
 const MetricCard: React.FC<MetricCardProps> = ({ 
   title, 
   value,  
-  icon: Icon, 
+  icon, 
   color, 
   isLoading 
 }) => {
   return (
     <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-4 sm:p-6 backdrop-blur-sm">
       <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${color} rounded-xl flex items-center justify-center`}>
-          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${color} rounded-xl flex items-center justify-center border-green-400`}>
+     {typeof icon === 'string' ? (
+  <img 
+    src="/onlyLogo.png" 
+
+    alt="Icon" 
+    className="w-5 h-5 sm:w-6 sm:h-6 object-contain"
+  />
+) : (
+  React.createElement(icon, { className: "w-5 h-5 sm:w-6 sm:h-6 text-white" })
+)}
         </div>
         
       </div>
@@ -140,7 +149,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <MetricCard
-        title="Total Users"
+        title="Total Wallet"
         value={(dashboardData.totalUsers ?? 0).toString()}
         change={usersChange.value}
         trend={usersChange.trend}
@@ -154,8 +163,8 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
         value={(dashboardData.totalReferralTokensEarned ?? 0).toString()}
         change={earningsChange.value}
         trend={earningsChange.trend}
-        icon={DollarSign}
-        color="from-purple-500 to-purple-600"
+        icon="Logo"
+        color="from-black-500 to-purple-600"
         isLoading={isLoading}
       />
     </div>
