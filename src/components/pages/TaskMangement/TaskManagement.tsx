@@ -16,7 +16,7 @@ const TaskManagement: React.FC = () => {
     description: '',
     link: '',
     taskDate: '',
-    startTime: '09:00',
+    startTime: '00:01',
     endTime: '23:59'
   });
 
@@ -27,7 +27,7 @@ const TaskManagement: React.FC = () => {
       description: '',
       link: '',
       taskDate: '',
-      startTime: '09:00',
+      startTime: '00:01',
       endTime: '23:59'
     });
     setIsEditing(false);
@@ -87,7 +87,7 @@ const TaskManagement: React.FC = () => {
       description: task.description,
       link: task.link,
       taskDate: task.taskDate || '',
-      startTime: task.startTime || '09:00',
+      startTime: task.startTime || '00:00',
       endTime: task.endTime || '23:59'
     });
     setIsEditing(true);
