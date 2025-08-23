@@ -3,7 +3,7 @@ import Sidebar from './layout/Sidebar';
 
 import TokenReward from './pages/TokenReward/TokenReward';
 import TaskManagement from './pages/TaskMangement/TaskManagement';
-import UserManagement from './pages/UserRefferal/UserManagement';
+
 import Dashboard from './pages/dashboard/Dashboard';
 
 
@@ -21,8 +21,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         return <TokenReward />;
       case 'tasks':
         return <TaskManagement />;
-      case 'users':
-        return <UserManagement />;
+    
       case 'analytics':
         return <Dashboard />;
     

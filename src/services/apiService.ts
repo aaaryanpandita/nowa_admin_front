@@ -515,6 +515,40 @@ async getReferredUsers(
     }
   }
 
+  // Delete daily task method
+async deleteDailyTask(taskId: string | number): Promise<TasksResponse> {
+  try {
+    console.log(`🗑️ Deleting daily task with ID: ${taskId}`);
+
+    const response = await this.authenticatedFetch(
+      `${API_BASE_URL}/admin/deleteDailyTask`,
+      {
+        method: 'DELETE',
+        body: JSON.stringify({ taskId }),
+      }
+    );
+
+    const data = await response.json();
+    console.log('🗑️ Delete daily task response:', data);
+
+    if (!response.ok) {
+      throw new Error(data.message || data.responseMessage || 'Failed to delete daily task');
+    }
+
+    return {
+      success: true,
+      message: data.message || data.responseMessage || 'Daily task deleted successfully',
+      result: data.result
+    };
+  } catch (error) {
+    console.error('❌ Delete daily task error:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Network error occurred'
+    };
+  }
+}
+
   async logout(): Promise<void> {
     try {
       // Clear stored data

@@ -4,11 +4,22 @@ import TaskCard from './TaskCard';
 import AddTaskModal from './AddTaskModal';
 import { useTaskManagement } from './hooks/useTaskManagement';
 import { DailyTask } from '../../../services/apiService';
+import { ConfirmationDialog } from './ConfirmationDialog'; 
 
 const TaskManagement: React.FC = () => {
-  const { tasks, loading, error, addingTask, addTask, updateTask, setError } = useTaskManagement();
+  const { tasks, loading, error, addingTask, addTask, updateTask, setError,deletingTask,deleteTask } = useTaskManagement();
 
   const [showAddTask, setShowAddTask] = useState(false);
+
+   const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    taskId: string | number | null;
+    taskTitle: string;
+  }>({
+    isOpen: false,
+    taskId: null,
+    taskTitle: ''
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [newTask, setNewTask] = useState({
     id: undefined as string | number | undefined,
@@ -31,6 +42,28 @@ const TaskManagement: React.FC = () => {
       endTime: '23:59'
     });
     setIsEditing(false);
+  };
+
+    // ADD THESE DELETE HANDLERS
+  const handleDeleteClick = (taskId: string | number, taskTitle: string) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      taskId,
+      taskTitle
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirmation.taskId) return;
+
+    const success = await deleteTask(deleteConfirmation.taskId);
+    if (success) {
+      setDeleteConfirmation({ isOpen: false, taskId: null, taskTitle: '' });
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmation({ isOpen: false, taskId: null, taskTitle: '' });
   };
 
   // Helper function to validate time
@@ -152,10 +185,11 @@ const TaskManagement: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {tasks.map((task, index) => (
-            <TaskCard 
+             <TaskCard 
               key={task.id || index} 
               task={task} 
               onEdit={handleEditTask}
+              onDelete={handleDeleteClick} // ADD THIS
             />
           ))}
         </div>
@@ -172,6 +206,17 @@ const TaskManagement: React.FC = () => {
         onSubmit={handleAddTask}
         onTaskChange={handleTaskChange}
         onErrorClose={() => setError(null)}
+      />
+
+       <ConfirmationDialog
+        isOpen={deleteConfirmation.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Task"
+        message={`Are you sure you want to delete "${deleteConfirmation.taskTitle}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={deletingTask}
       />
     </div>
   );

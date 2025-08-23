@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { AlertCircle } from "lucide-react";
 // Import the real API service instead of mock
 import DashboardMetrics from "./DashboardMetrics";
+import UserManagement from "../UserRefferal/UserManagement";
 
 const Dashboard: React.FC = () => {
   const [notification, setNotification] = useState<string | null>(null);
@@ -40,11 +41,10 @@ const Dashboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              Dashboard & Reports
+              Users Dashboard
             </h1>
             <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">
-              Track performance and generate insights
-            </p>
+Monitor and manage user wallets and referral activities            </p>
           </div>
         </div>
 
@@ -187,6 +187,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div> */}
+        <UserManagement/>
       </div>
     </div>
   );

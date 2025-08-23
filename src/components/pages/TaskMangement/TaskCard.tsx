@@ -7,15 +7,27 @@ import {
   Edit,
   Calendar,
   Clock,
+  Trash2,
 } from "lucide-react";
 import { DailyTask } from "../../../services/apiService";
+
 
 interface TaskCardProps {
   task: DailyTask;
   onEdit: (task: DailyTask) => void;
+  onDelete: (taskId: string | number, taskTitle: string) => void; // ADD THIS
+
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit , onDelete}) => {
+
+
+    const handleDelete = () => {
+    if (task.id) {
+      onDelete(task.id, task.title);
+    }
+  };
+
   const getTaskIcon = (title: string) => {
     const titleLower = title.toLowerCase();
     if (titleLower.includes("twitter") || titleLower.includes("tweet"))
@@ -101,6 +113,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit }) => {
             title="Edit task"
           >
             <Edit className="w-4 h-4" />
+          </button>
+           <button
+            onClick={handleDelete}
+            className="p-2 text-gray-400 hover:text-red-400 transition-colors"
+            title="Delete task"
+          >
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>

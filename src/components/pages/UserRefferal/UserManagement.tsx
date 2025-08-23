@@ -7,6 +7,8 @@ import { UserRow } from "./UserRow";
 import { UserCard } from "./UserCard";
 import { RefreshCcw } from "lucide-react";
 
+
+
 const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [users, setUsers] = useState<User[]>([]);
@@ -389,12 +391,7 @@ const UserManagement: React.FC = () => {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">User Management</h1>
-          <p className="text-gray-400 mt-2 text-sm sm:text-base">
-            Monitor and manage user accounts and referral activities
-          </p>
-        </div>
+        
       </div>
 
       {/* Search and Filter */}

@@ -13,6 +13,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { User } from "./types/userTypes";
+import { CopyButton } from './CopyButton';
 
 interface UserRowProps {
   user: User;
@@ -56,54 +57,59 @@ export const UserRow: React.FC<UserRowProps> = ({
       </span>
     </div>
   );
+const SocialMediaDisplay: React.FC<{
+  username?: string;
+  platform: "instagram" | "x" | "telegram";
+}> = ({ username = "", platform }) => {
+  if (!username || username.trim() === "") {
+    return <span className="text-gray-500 text-sm">-</span>;
+  }
 
-  const SocialMediaDisplay: React.FC<{
-    username?: string;
-    platform: "instagram" | "x" | "telegram";
-  }> = ({ username = "", platform }) => {
-    if (!username || username.trim() === "") {
-      return <span className="text-gray-500 text-sm">-</span>;
+  const getIcon = () => {
+    switch (platform) {
+      case "instagram":
+        return <Instagram className="w-3 h-3" />;
+      case "x":
+        return (
+          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+        );
+      case "telegram":
+        return <MessageCircle className="w-3 h-3" />;
+      default:
+        return null;
     }
-
-    const getIcon = () => {
-      switch (platform) {
-        case "instagram":
-          return <Instagram className="w-3 h-3" />;
-        case "x":
-          return (
-            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-          );
-        case "telegram":
-          return <MessageCircle className="w-3 h-3" />;
-        default:
-          return null;
-      }
-    };
-
-    const getPlatformColor = () => {
-      switch (platform) {
-        case "instagram":
-          return "text-pink-400";
-        case "x":
-          return "text-blue-400";
-        case "telegram":
-          return "text-cyan-400";
-        default:
-          return "text-gray-400";
-      }
-    };
-
-    return (
-      <div className="flex items-center space-x-1 justify-center">
-        <div className={getPlatformColor()}>{getIcon()}</div>
-        <span className="text-white text-sm font-mono max-w-20 " title={`@${username}`}>
-          @{username}
-        </span>
-      </div>
-    );
   };
+
+  const getPlatformColor = () => {
+    switch (platform) {
+      case "instagram":
+        return "text-pink-400";
+      case "x":
+        return "text-blue-400";
+      case "telegram":
+        return "text-cyan-400";
+      default:
+        return "text-gray-400";
+    }
+  };
+
+  const displayName = username.length > 12 ? `${username.slice(0, 10)}...` : username;
+
+  return (
+    <div className="flex items-center space-x-1 justify-center group">
+      <div className={getPlatformColor()}>{getIcon()}</div>
+      <span 
+        className="text-white text-sm font-mono max-w-20 truncate" 
+        title={`@${username}`}
+      >
+        @{displayName}
+      </span>
+      <CopyButton text={username} size="sm" className="opacity-0 group-hover:opacity-100" />
+    </div>
+  );
+};
 
   // Fixed: Handle optional date string with proper type checking
   const formatDate = (dateString?: string): string => {
@@ -233,6 +239,7 @@ export const UserRow: React.FC<UserRowProps> = ({
                     : user.walletAddress}
                 </span>
               </p>
+              <CopyButton text={user.walletAddress} size="sm" />
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 {!user.socialTasksCompleted && user.referralTasksCompleted && (
                   <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">
@@ -491,6 +498,7 @@ export const UserRow: React.FC<UserRowProps> = ({
                           : referral.walletAddress}
                       </span>
                     </span>
+                    <CopyButton text={referral.walletAddress} size="sm" className="opacity-0 group-hover:opacity-100" />
                   </div>
                 </td>
                 <td className="p-3">

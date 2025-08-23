@@ -21,10 +21,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'Token_Reward', label: 'Token Reward', icon: Gift },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-    { id: 'users', label: 'Users', icon: Users },
+    { id: 'dashboard', label: 'Users Dashboard', icon: LayoutDashboard },
+    { id: 'Token_Reward', label: 'Referral Reward Settings', icon: Gift },
+    { id: 'tasks', label: 'Daily Tasks', icon: CheckSquare },
+   
     
    
   ];

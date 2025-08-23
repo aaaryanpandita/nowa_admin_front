@@ -6,6 +6,7 @@ export const useTaskManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addingTask, setAddingTask] = useState(false);
+   const [deletingTask, setDeletingTask] = useState(false);
 
   const fetchTasks = async () => {
     try {
@@ -31,6 +32,30 @@ export const useTaskManagement = () => {
       setTasks([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+   const deleteTask = async (taskId: string | number) => {
+    try {
+      setDeletingTask(true);
+      setError(null);
+
+      const response = await apiService.deleteDailyTask(taskId);
+
+      if (response.success) {
+        await fetchTasks(); // Refresh the tasks list
+        return true;
+      } else {
+        console.error('❌ Delete task failed:', response.message);
+        setError(response.message || 'Failed to delete task');
+        return false;
+      }
+    } catch (err) {
+      console.error('❌ Delete task error:', err);
+      setError('Network error occurred while deleting task');
+      return false;
+    } finally {
+      setDeletingTask(false);
     }
   };
 
@@ -178,6 +203,8 @@ export const useTaskManagement = () => {
     error,
     addingTask,
     addTask,
+    deletingTask,
+    deleteTask,
     updateTask,
     setError
   };
