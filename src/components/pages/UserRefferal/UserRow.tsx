@@ -492,21 +492,25 @@ const SocialMediaDisplay: React.FC<{
                 <td className="p-3">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-[#00FFA9] rounded-full"></div>
-                    <span
-                      className="text-white text-sm font-mono break-all lg:break-normal"
-                      title={referral.walletAddress}
-                    >
-                      <span className="hidden lg:inline">
-  {user.walletAddress.length > 20
-    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
-    : user.walletAddress}
+                   <span
+  className="text-white text-sm font-mono break-all lg:break-normal"
+  title={referral.walletAddress} // full address on hover
+>
+  {/* Desktop view: first 6 + last 6 */}
+  <span className="hidden lg:inline">
+    {referral.walletAddress.length > 20
+      ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-6)}`
+      : referral.walletAddress}
+  </span>
+
+  {/* Mobile view: first 6 + last 2 */}
+  <span className="lg:hidden">
+    {referral.walletAddress.length > 10
+      ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-2)}`
+      : referral.walletAddress}
+  </span>
 </span>
-<span className="lg:hidden">
-  {user.walletAddress.length > 20
-    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-2)}`
-    : user.walletAddress}
-</span>
-                    </span>
+
                     <CopyButton text={referral.walletAddress} size="sm" className="opacity-0 group-hover:opacity-100" />
                   </div>
                 </td>
