@@ -149,7 +149,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
       <MetricCard
-        title="Total Wallet"
+        title="Total Wallets"
         value={(dashboardData.totalUsers ?? 0).toString()}
         change={usersChange.value}
         trend={usersChange.trend}

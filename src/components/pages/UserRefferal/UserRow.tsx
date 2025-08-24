@@ -42,11 +42,10 @@ export const UserRow: React.FC<UserRowProps> = ({
   }) => (
     <div className="flex items-center space-x-2">
       <div
-        className={`flex items-center justify-center w-5 h-5 rounded-full ${
-          completed
-            ? "bg-green-500/20 text-green-400"
-            : "bg-red-500/20 text-red-400"
-        }`}
+        className={`flex items-center justify-center w-5 h-5 rounded-full ${completed
+          ? "bg-green-500/20 text-green-400"
+          : "bg-red-500/20 text-red-400"
+          }`}
       >
         {completed ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
       </div>
@@ -57,59 +56,59 @@ export const UserRow: React.FC<UserRowProps> = ({
       </span>
     </div>
   );
-const SocialMediaDisplay: React.FC<{
-  username?: string;
-  platform: "instagram" | "x" | "telegram";
-}> = ({ username = "", platform }) => {
-  if (!username || username.trim() === "") {
-    return <span className="text-gray-500 text-sm">-</span>;
-  }
-
-  const getIcon = () => {
-    switch (platform) {
-      case "instagram":
-        return <Instagram className="w-3 h-3" />;
-      case "x":
-        return (
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-        );
-      case "telegram":
-        return <MessageCircle className="w-3 h-3" />;
-      default:
-        return null;
+  const SocialMediaDisplay: React.FC<{
+    username?: string;
+    platform: "instagram" | "x" | "telegram";
+  }> = ({ username = "", platform }) => {
+    if (!username || username.trim() === "") {
+      return <span className="text-gray-500 text-sm">-</span>;
     }
+
+    const getIcon = () => {
+      switch (platform) {
+        case "instagram":
+          return <Instagram className="w-3 h-3" />;
+        case "x":
+          return (
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+          );
+        case "telegram":
+          return <MessageCircle className="w-3 h-3" />;
+        default:
+          return null;
+      }
+    };
+
+    const getPlatformColor = () => {
+      switch (platform) {
+        case "instagram":
+          return "text-pink-400";
+        case "x":
+          return "text-blue-400";
+        case "telegram":
+          return "text-cyan-400";
+        default:
+          return "text-gray-400";
+      }
+    };
+
+    const displayName = username.length > 12 ? `${username.slice(0, 10)}...` : username;
+
+    return (
+      <div className="flex items-center space-x-1 justify-center group">
+        <div className={getPlatformColor()}>{getIcon()}</div>
+        <span
+          className="text-white text-sm font-mono max-w-20 truncate"
+          title={`${username}`}
+        >
+          {displayName}
+        </span>
+        <CopyButton text={username} size="sm" className="opacity-0 group-hover:opacity-100" />
+      </div>
+    );
   };
-
-  const getPlatformColor = () => {
-    switch (platform) {
-      case "instagram":
-        return "text-pink-400";
-      case "x":
-        return "text-blue-400";
-      case "telegram":
-        return "text-cyan-400";
-      default:
-        return "text-gray-400";
-    }
-  };
-
-  const displayName = username.length > 12 ? `${username.slice(0, 10)}...` : username;
-
-  return (
-    <div className="flex items-center space-x-1 justify-center group">
-      <div className={getPlatformColor()}>{getIcon()}</div>
-      <span 
-        className="text-white text-sm font-mono max-w-20 truncate" 
-        title={`${username}`}
-      >
-        {displayName}
-      </span>
-      <CopyButton text={username} size="sm" className="opacity-0 group-hover:opacity-100" />
-    </div>
-  );
-};
 
   // Fixed: Handle optional date string with proper type checking
   const formatDate = (dateString?: string): string => {
@@ -210,11 +209,10 @@ const SocialMediaDisplay: React.FC<{
     <>
       {/* Main User Row */}
       <tr
-        className={`border-b border-gray-700/50 transition-colors ${
-          user.referralCount && user.referralCount > 0
-            ? "hover:bg-gray-700/30 cursor-pointer"
-            : "hover:bg-gray-700/10"
-        }`}
+        className={`border-b border-gray-700/50 transition-colors ${user.referralCount && user.referralCount > 0
+          ? "hover:bg-gray-700/30 cursor-pointer"
+          : "hover:bg-gray-700/10"
+          }`}
         onClick={handleRowClick}
       >
         <td className="p-4 lg:p-6">
@@ -233,18 +231,18 @@ const SocialMediaDisplay: React.FC<{
             <div className="min-w-0 flex-1">
               <p className="text-white font-medium text-sm lg:text-base font-mono break-all" title={user.walletAddress}>
                 <span className="hidden lg:inline">
-  {user.walletAddress.length > 20
-    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
-    : user.walletAddress}
-</span>
-<span className="lg:hidden">
-  {user.walletAddress.length > 20
-    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-2)}`
-    : user.walletAddress}
-</span>
- <CopyButton text={user.walletAddress} size="sm" />
+                  {user.walletAddress.length > 20
+                    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
+                    : user.walletAddress}
+                </span>
+                <span className="lg:hidden">
+                  {user.walletAddress.length > 20
+                    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-2)}`
+                    : user.walletAddress}
+                </span>
+                <CopyButton text={user.walletAddress} size="sm" />
               </p>
-             
+
               <div className="flex flex-wrap items-center gap-2 mt-1">
                 {!user.socialTasksCompleted && user.referralTasksCompleted && (
                   <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">
@@ -261,7 +259,7 @@ const SocialMediaDisplay: React.FC<{
             <span className="text-white font-medium">
               {user.referralCount || 0}
             </span>
-            
+
           </div>
         </td>
         <td className="p-4 lg:p-6">
@@ -272,9 +270,8 @@ const SocialMediaDisplay: React.FC<{
         </td>
         <td className="p-4 lg:p-6 text-center">
           <div
-            className={`text-sm ${
-              user.socialTasksCompleted ? "text-green-400" : "text-red-400"
-            }`}
+            className={`text-sm ${user.socialTasksCompleted ? "text-green-400" : "text-red-400"
+              }`}
           >
             <span className="hidden lg:inline">
               {user.socialTasksCompleted ? "Completed" : "Not Completed"}
@@ -286,9 +283,8 @@ const SocialMediaDisplay: React.FC<{
         </td>
         <td className="p-4 lg:p-6 text-center">
           <div
-            className={`text-sm ${
-              user.referralTasksCompleted ? "text-green-400" : "text-red-400"
-            }`}
+            className={`text-sm ${user.referralTasksCompleted ? "text-green-400" : "text-red-400"
+              }`}
           >
             <span className="hidden lg:inline">
               {user.referralTasksCompleted ? "Completed" : "Not Completed"}
@@ -388,11 +384,10 @@ const SocialMediaDisplay: React.FC<{
                               e.stopPropagation();
                               handleReferralPageChange(pageNumber);
                             }}
-                            className={`px-2 py-1 rounded transition-colors text-xs min-w-[28px] ${
-                              currentRefPage === pageNumber
-                                ? "bg-[#00FFA9] text-black font-medium"
-                                : "bg-gray-700 hover:bg-gray-600 text-white"
-                            }`}
+                            className={`px-2 py-1 rounded transition-colors text-xs min-w-[28px] ${currentRefPage === pageNumber
+                              ? "bg-[#00FFA9] text-black font-medium"
+                              : "bg-gray-700 hover:bg-gray-600 text-white"
+                              }`}
                             title={`Go to page ${pageNumber}`}
                           >
                             {pageNumber}
@@ -492,26 +487,25 @@ const SocialMediaDisplay: React.FC<{
                 <td className="p-3">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-[#00FFA9] rounded-full"></div>
-                   <span
-  className="text-white text-sm font-mono break-all lg:break-normal"
-  title={referral.walletAddress} // full address on hover
->
-  {/* Desktop view: first 6 + last 6 */}
-  <span className="hidden lg:inline">
-    {referral.walletAddress.length > 20
-      ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-6)}`
-      : referral.walletAddress}
-  </span>
+                    <span
+                      className="text-white text-sm font-mono break-all lg:break-normal"
+                      title={referral.walletAddress} // full address on hover
+                    >
+                      {/* Desktop view: first 6 + last 6 */}
+                      <span className="hidden lg:inline">
+                        {referral.walletAddress.length > 20
+                          ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-6)}`
+                          : referral.walletAddress}
+                      </span>
+                      <span className="lg:hidden">
+                        {referral.walletAddress.length > 12
+                          ? `${referral.walletAddress.slice(0, 4)}...${referral.walletAddress.slice(-4)}`
+                          : referral.walletAddress}
+                      </span>
 
-  {/* Mobile view: first 6 + last 2 */}
-  <span className="lg:hidden">
-    {referral.walletAddress.length > 10
-      ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-2)}`
-      : referral.walletAddress}
-  </span>
-</span>
+                    </span>
 
-                    <CopyButton text={referral.walletAddress} size="sm" className="opacity-0 group-hover:opacity-100" />
+                    <CopyButton text={referral.walletAddress} size="sm"  />
                   </div>
                 </td>
                 <td className="p-3">

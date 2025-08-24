@@ -12,7 +12,7 @@ import {
   Instagram,
   MessageCircle,
   Calendar,
-  
+
   User as UserIcon,
 } from "lucide-react";
 import { User } from "./types/userTypes";
@@ -46,11 +46,10 @@ export const UserCard: React.FC<UserCardProps> = ({
   }) => (
     <div className="flex items-center space-x-2">
       <div
-        className={`flex items-center justify-center w-4 h-4 rounded-full ${
-          completed
+        className={`flex items-center justify-center w-4 h-4 rounded-full ${completed
             ? "bg-green-500/20 text-green-400"
             : "bg-red-500/20 text-red-400"
-        }`}
+          }`}
       >
         {completed ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
       </div>
@@ -62,59 +61,59 @@ export const UserCard: React.FC<UserCardProps> = ({
     </div>
   );
 
-const SocialMediaDisplay: React.FC<{
-  username?: string;
-  platform: "instagram" | "x" | "telegram";
-}> = ({ username = "", platform }) => {
-  if (!username || username.trim() === "") {
-    return <span className="text-gray-500 text-sm">-</span>;
-  }
-
-  const getIcon = () => {
-    switch (platform) {
-      case "instagram":
-        return <Instagram className="w-3 h-3" />;
-      case "x":
-        return (
-          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-          </svg>
-        );
-      case "telegram":
-        return <MessageCircle className="w-3 h-3" />;
-      default:
-        return null;
+  const SocialMediaDisplay: React.FC<{
+    username?: string;
+    platform: "instagram" | "x" | "telegram";
+  }> = ({ username = "", platform }) => {
+    if (!username || username.trim() === "") {
+      return <span className="text-gray-500 text-sm">-</span>;
     }
+
+    const getIcon = () => {
+      switch (platform) {
+        case "instagram":
+          return <Instagram className="w-3 h-3" />;
+        case "x":
+          return (
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+            </svg>
+          );
+        case "telegram":
+          return <MessageCircle className="w-3 h-3" />;
+        default:
+          return null;
+      }
+    };
+
+    const getPlatformColor = () => {
+      switch (platform) {
+        case "instagram":
+          return "text-pink-400";
+        case "x":
+          return "text-blue-400";
+        case "telegram":
+          return "text-cyan-400";
+        default:
+          return "text-gray-400";
+      }
+    };
+
+    const displayName = username.length > 12 ? `${username.slice(0, 10)}...` : username;
+
+    return (
+      <div className="flex items-center space-x-1 group">
+        <div className={getPlatformColor()}>{getIcon()}</div>
+        <span
+          className="text-white text-xs font-mono break-all max-w-[100px] sm:max-w-none truncate"
+          title={`${username}`}
+        >
+          {displayName}
+        </span>
+        <CopyButton text={username} size="sm" className="opacity-0 group-hover:opacity-100" />
+      </div>
+    );
   };
-
-  const getPlatformColor = () => {
-    switch (platform) {
-      case "instagram":
-        return "text-pink-400";
-      case "x":
-        return "text-blue-400";
-      case "telegram":
-        return "text-cyan-400";
-      default:
-        return "text-gray-400";
-    }
-  };
-
-  const displayName = username.length > 12 ? `${username.slice(0, 10)}...` : username;
-
-  return (
-    <div className="flex items-center space-x-1 group">
-      <div className={getPlatformColor()}>{getIcon()}</div>
-      <span 
-        className="text-white text-xs font-mono break-all max-w-[100px] sm:max-w-none truncate" 
-        title={`${username}`}
-      >
-        {displayName}
-      </span>
-      <CopyButton text={username} size="sm" className="opacity-0 group-hover:opacity-100" />
-    </div>
-  );
-};
 
   // Fixed: Handle optional date string with proper type checking
   const formatDate = (dateString?: string): string => {
@@ -187,11 +186,10 @@ const SocialMediaDisplay: React.FC<{
     <div className="border-b border-gray-700/50 last:border-b-0">
       {/* Main User Card */}
       <div
-        className={`p-4 transition-colors ${
-          user.referralCount && user.referralCount > 0
+        className={`p-4 transition-colors ${user.referralCount && user.referralCount > 0
             ? "hover:bg-gray-700/30 cursor-pointer"
             : "hover:bg-gray-700/10"
-        }`}
+          }`}
         onClick={handleCardClick}
       >
         {/* User Header */}
@@ -212,9 +210,11 @@ const SocialMediaDisplay: React.FC<{
             )}
             <div className="flex-1 min-w-0">
               <p className="text-white font-medium font-mono text-sm break-all" title={user.walletAddress}>
-                {user.walletAddress}
+                {user.walletAddress.length > 20
+                  ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
+                  : user.walletAddress}
               </p>
-               <CopyButton text={user.walletAddress} size="sm" />
+              <CopyButton text={user.walletAddress} size="sm" />
               <div className="flex flex-wrap items-center gap-1 mt-1">
                 {!user.socialTasksCompleted && user.referralTasksCompleted && (
                   <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs">
@@ -352,11 +352,10 @@ const SocialMediaDisplay: React.FC<{
                         e.stopPropagation();
                         handleReferralPageChange(pageNumber);
                       }}
-                      className={`px-3 py-1 rounded text-sm transition-colors ${
-                        currentRefPage === pageNumber
+                      className={`px-3 py-1 rounded text-sm transition-colors ${currentRefPage === pageNumber
                           ? "bg-[#00FFA9] text-black font-medium"
                           : "bg-gray-700 hover:bg-gray-600 text-white"
-                      }`}
+                        }`}
                     >
                       {pageNumber}
                     </button>
@@ -399,9 +398,11 @@ const SocialMediaDisplay: React.FC<{
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="w-2 h-2 bg-[#00FFA9] rounded-full"></div>
                     <span className="text-white text-sm font-mono break-all" title={referral.walletAddress}>
-                      {referral.walletAddress}
+                      {referral.walletAddress.length > 20
+                        ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-6)}`
+                        : referral.walletAddress}
                     </span>
-                     <CopyButton text={referral.walletAddress} size="sm" className="opacity-0 group-hover:opacity-100" />
+                    <CopyButton text={referral.walletAddress} size="sm" />
                   </div>
 
                   {/* Referral Stats */}
