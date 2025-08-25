@@ -180,19 +180,19 @@ useEffect(() => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Task Management</h1>
-          <p className="text-gray-400 mt-2">Create and manage daily tasks for users</p>
-        </div>
-        <button
-          onClick={() => setShowAddTask(true)}
-          className="flex items-center space-x-2 bg-gradient-to-r from-[#00FFA9] to-[#00CC87] text-black font-semibold px-6 py-3 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-[#00FFA9]/25"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Add Task</span>
-        </button>
-      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+  <div>
+    <h1 className="text-2xl sm:text-3xl font-bold text-white">Task Management</h1>
+    <p className="text-gray-400 mt-2 text-sm sm:text-base">Create and manage daily tasks for users</p>
+  </div>
+  <button
+    onClick={() => setShowAddTask(true)}
+    className="flex items-center justify-center space-x-2 bg-gradient-to-r from-[#00FFA9] to-[#00CC87] text-black font-semibold px-4 sm:px-6 py-3 rounded-xl hover:scale-105 transition-all duration-300 shadow-lg shadow-[#00FFA9]/25 w-full sm:w-auto"
+  >
+    <Plus className="w-5 h-5" />
+    <span>Add Task</span>
+  </button>
+</div>
 
       {/* Error Message */}
       {error && (

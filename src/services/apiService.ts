@@ -170,11 +170,11 @@ export class ApiService {
         throw new Error(data.message || 'Invalid email or password');
       }
 
-      // Store token in localStorage if login is successful
+      // Store token in SESSION if login is successful
       if (data.result.token) {
         const token = data.result.token;
-        localStorage.setItem('adminToken', token);
-        localStorage.setItem('adminUser', JSON.stringify(data.user));
+        sessionStorage.setItem('adminToken', token);
+        sessionStorage.setItem('adminUser', JSON.stringify(data.user));
       } else {
         console.warn('⚠️ No token in login response');
       }
@@ -552,26 +552,26 @@ async deleteDailyTask(taskId: string | number): Promise<TasksResponse> {
   async logout(): Promise<void> {
     try {
       // Clear stored data
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('adminUser');
+      sessionStorage.removeItem('adminToken');
+      sessionStorage.removeItem('adminUser');
     } catch (error) {
       console.error('❌ Logout error:', error);
     }
   }
 
   isAuthenticated(): boolean {
-    const token = localStorage.getItem('adminToken');
+    const token = sessionStorage.getItem('adminToken');
     const isAuth = !!token;
     return isAuth;
   }
 
   getAuthToken(): string | null {
-    const token = localStorage.getItem('adminToken');
+    const token = sessionStorage.getItem('adminToken');
     return token;
   }
 
   getCurrentUser(): any {
-    const user = localStorage.getItem('adminUser');
+    const user = sessionStorage.getItem('adminUser');
     return user ? JSON.parse(user) : null;
   }
 }

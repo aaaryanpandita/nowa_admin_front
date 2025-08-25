@@ -1,13 +1,18 @@
 // Enhanced UserManagement.tsx - Simplified search with cleaner UI
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Users, AlertCircle, Loader, Filter, Search,Download ,RefreshCcw } from "lucide-react";
+import {
+  Users,
+  AlertCircle,
+  Loader,
+  Filter,
+  Search,
+  Download,
+  RefreshCcw,
+} from "lucide-react";
 import { apiService } from "../../../services/apiService";
 import { User } from "./types/userTypes";
 import { UserRow } from "./UserRow";
 import { UserCard } from "./UserCard";
-
-
-
 
 const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,42 +36,413 @@ const UserManagement: React.FC = () => {
 
   // Referral-specific state management
   const [userReferralPagination, setUserReferralPagination] = useState<
-    Map<number, { totalReferred: number; currentPage: number; totalPages: number }>
+    Map<
+      number,
+      { totalReferred: number; currentPage: number; totalPages: number }
+    >
   >(new Map());
-  const [loadingReferrals, setLoadingReferrals] = useState<Map<number, boolean>>(new Map());
+  const [loadingReferrals, setLoadingReferrals] = useState<
+    Map<number, boolean>
+  >(new Map());
 
   // Smart search function - stops as soon as results are found
-  const performGlobalSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      setIsSearchMode(false);
-      setSearchResults([]);
-      return;
-    }
+  const performGlobalSearch = useCallback(
+    async (searchQuery: string) => {
+      if (!searchQuery.trim()) {
+        setIsSearchMode(false);
+        setSearchResults([]);
+        return;
+      }
 
-    setIsSearching(true);
-    setIsSearchMode(true);
-    
-    try {
-      
-      
-      const searchResults: User[] = [];
-      let searchPage = 1;
-      let totalPagesFound = totalPages || 1;
+      setIsSearching(true);
+      setIsSearchMode(true);
 
-      // Search page by page, stop when results are found
-      while (searchPage <= totalPagesFound) {
-        
-        
-        const response = await apiService.getAllUsers(searchPage);
-        
-        if (response.success && response.data) {
-          const { users: pageUsers, totalPages: apiTotalPages } = response.data.result;
-          
-          // Update total pages if we get new information
-          if (apiTotalPages && apiTotalPages !== totalPagesFound) {
-            totalPagesFound = apiTotalPages;
+      try {
+        const searchResults: User[] = [];
+        let searchPage = 1;
+        let totalPagesFound = totalPages || 1;
+
+        // Search page by page, stop when results are found
+        while (searchPage <= totalPagesFound) {
+          const response = await apiService.getAllUsers(searchPage);
+
+          if (response.success && response.data) {
+            const { users: pageUsers, totalPages: apiTotalPages } =
+              response.data.result;
+
+            // Update total pages if we get new information
+            if (apiTotalPages && apiTotalPages !== totalPagesFound) {
+              totalPagesFound = apiTotalPages;
+            }
+
+            if (Array.isArray(pageUsers) && pageUsers.length > 0) {
+              const mappedUsers: User[] = pageUsers.map((user: any) => ({
+                id: user.walletAddress,
+                walletAddress: user.walletAddress,
+                socialTasksCompleted: user.socialTasksCompleted,
+                referralTasksCompleted: user.referralTasksCompleted,
+                hasCompletedBoth: user.hasCompletedBoth,
+                rewardEarned: user.rewardEarned,
+                rewardStatus: user.rewardStatus,
+                xusername: user.xusername || "",
+                instagramusername: user.instagramusername || "",
+                telegramusername: user.telegramusername || "",
+                createdAt: user.createdAt || "",
+                referrals: [],
+                referralCount: user.totalReferred || 0,
+              }));
+
+              // Filter users that match the search query (case-insensitive partial match)
+              const matchingUsers = mappedUsers.filter((user) =>
+                user.walletAddress
+                  .toLowerCase()
+                  .includes(searchQuery.toLowerCase())
+              );
+
+              if (matchingUsers.length > 0) {
+                searchResults.push(...matchingUsers);
+
+                break; // STOP as soon as we find results
+              }
+            }
+
+            // Move to next page
+            searchPage++;
+          } else {
+            // API error, stop searching
+            console.log(`❌ API error at page ${searchPage}, stopping search`);
+            break;
           }
-          
+
+          // Small delay to prevent overwhelming the API
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
+
+        if (searchResults.length === 0) {
+          console.log(
+            `🎯 Smart search completed: No results found after searching ${
+              searchPage - 1
+            } page(s)`
+          );
+        } else {
+          console.log(
+            `🎯 Smart search completed: Found ${searchResults.length} matching user(s)`
+          );
+        }
+
+        setSearchResults(searchResults);
+      } catch (error) {
+        console.error("❌ Smart search error:", error);
+        setError("Error occurred during search. Please try again.");
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [totalPages]
+  );
+
+  // Optimized debounced search effect
+  useEffect(() => {
+    const searchTimeout = setTimeout(() => {
+      if (searchTerm.trim()) {
+        performGlobalSearch(searchTerm);
+      } else {
+        setIsSearchMode(false);
+        setSearchResults([]);
+      }
+    }, 300);
+
+    return () => clearTimeout(searchTimeout);
+  }, [searchTerm, performGlobalSearch]);
+
+  // Optimized user data fetching
+  const fetchUsersData = useCallback(
+    async (page: number = 1) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await apiService.getAllUsers(page);
+
+        if (response.success && response.data) {
+          const {
+            totalUsers,
+            totalReferralTokensEarned,
+            users,
+            totalPages: apiTotalPages,
+          } = response.data.result;
+
+          if (Array.isArray(users)) {
+            const mappedUsers: User[] = users.map((user: any) => ({
+              id: user.walletAddress,
+              walletAddress: user.walletAddress,
+              socialTasksCompleted: user.socialTasksCompleted,
+              referralTasksCompleted: user.referralTasksCompleted,
+              hasCompletedBoth: user.hasCompletedBoth,
+              rewardEarned: user.rewardEarned,
+              rewardStatus: user.rewardStatus,
+              xusername: user.xusername || "",
+              instagramusername: user.instagramusername || "",
+              telegramusername: user.telegramusername || "",
+              createdAt: user.createdAt || "",
+              referrals: [],
+              referralCount: user.totalReferred || 0,
+            }));
+
+            const calculatedTotalPages =
+              apiTotalPages || Math.ceil(totalUsers / itemsPerPage);
+
+            // console.log("✅ Users data fetched successfully:", {
+            //   totalUsers,
+            //   totalReferralTokensEarned,
+            //   usersCount: mappedUsers.length,
+            //   page,
+            //   totalPages: calculatedTotalPages,
+            // });
+
+            setTotalUsers(totalUsers);
+            setTotalReferralTokensEarned(totalReferralTokensEarned);
+            setUsers(mappedUsers);
+            setTotalPages(calculatedTotalPages);
+          } else {
+            setError("Users data is not in the expected format.");
+          }
+        } else {
+          const errorMessage = response.message || "Failed to fetch user data";
+          console.error("❌ API Error:", errorMessage);
+          setError(errorMessage);
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Network error occurred";
+        console.error("❌ Error fetching users:", err);
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [itemsPerPage]
+  );
+
+  // Optimized referral fetching
+  const fetchUserReferrals = useCallback(
+    async (userId: number, refPage: number = 1) => {
+      const currentUserList = isSearchMode ? searchResults : users;
+      const user = currentUserList.find((u) => u.id === userId);
+
+      if (!user?.walletAddress?.trim()) {
+        console.error("❌ Invalid user or walletAddress for user ID:", userId);
+        return;
+      }
+
+      setLoadingReferrals((prev) => new Map(prev).set(userId, true));
+
+      try {
+        const response = await apiService.getReferredUsers(
+          user.walletAddress,
+          refPage,
+          referralsPerPage
+        );
+
+        if (response.success && response.data) {
+          const { referrals, pagination } = response.data;
+
+          // Update user referrals in both users and searchResults
+          const updateUserReferrals = (prevUsers: User[]) =>
+            prevUsers.map((u) => (u.id === userId ? { ...u, referrals } : u));
+
+          setUsers(updateUserReferrals);
+          if (isSearchMode) {
+            setSearchResults(updateUserReferrals);
+          }
+
+          // Update referral pagination state
+          setUserReferralPagination((prev) =>
+            new Map(prev).set(userId, {
+              totalReferred: pagination.totalReferrals,
+              currentPage: pagination.currentPage,
+              totalPages: pagination.totalPages,
+            })
+          );
+        } else {
+          console.error("❌ Failed to fetch referrals for user", userId);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching referrals:", error);
+      } finally {
+        setLoadingReferrals((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(userId);
+          return newMap;
+        });
+      }
+    },
+    [users, searchResults, isSearchMode, referralsPerPage]
+  );
+
+  // Initialize data
+  useEffect(() => {
+    fetchUsersData(currentPage);
+  }, [currentPage, fetchUsersData]);
+
+  // Optimized refresh handler
+  const handleRefresh = useCallback(async () => {
+    setIsSearchMode(false);
+    setSearchResults([]);
+    setSearchTerm("");
+    setExpandedUsers(new Set());
+    setUserReferralPagination(new Map());
+
+    await fetchUsersData(currentPage);
+  }, [currentPage, fetchUsersData]);
+
+  // Clear search handler
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm("");
+    setIsSearchMode(false);
+    setSearchResults([]);
+    setExpandedUsers(new Set());
+    setUserReferralPagination(new Map());
+  }, []);
+
+  // Memoized filtered users
+  const filteredUsers = useMemo(() => {
+    const currentUserList = isSearchMode ? searchResults : users;
+
+    return currentUserList.filter((user) => {
+      const matchesFilter =
+        filterStatus === "all" ||
+        user.rewardStatus.toLowerCase() === filterStatus.toLowerCase();
+      return matchesFilter;
+    });
+  }, [users, searchResults, isSearchMode, filterStatus]);
+
+  // Memoized filter options
+  const filterOptions = useMemo(
+    () => [
+      {
+        value: "pending",
+        label: "Pending",
+        count: users.filter((u) => u.rewardStatus.toLowerCase() === "pending")
+          .length,
+      },
+      {
+        value: "not_eligible",
+        label: "Not Eligible",
+        count: users.filter(
+          (u) => u.rewardStatus.toLowerCase() === "not_eligible"
+        ).length,
+      },
+      {
+        value: "none",
+        label: "None",
+        count: users.filter((u) => u.rewardStatus.toLowerCase() === "none")
+          .length,
+      },
+    ],
+    [users]
+  );
+
+  // Optimized expand handler
+  const handleToggleExpand = useCallback(
+    (userId: number) => {
+      setExpandedUsers((prev) => {
+        const newExpanded = new Set(prev);
+        if (newExpanded.has(userId)) {
+          newExpanded.delete(userId);
+
+          // Clear referral data
+          const clearReferrals = (prevUsers: User[]) =>
+            prevUsers.map((u) =>
+              u.id === userId ? { ...u, referrals: [] } : u
+            );
+
+          setUsers(clearReferrals);
+          if (isSearchMode) {
+            setSearchResults(clearReferrals);
+          }
+
+          setUserReferralPagination((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(userId);
+            return newMap;
+          });
+        } else {
+          newExpanded.add(userId);
+          fetchUserReferrals(userId, 1);
+        }
+        return newExpanded;
+      });
+    },
+    [isSearchMode, fetchUserReferrals]
+  );
+
+  // Add this utility function for CSV export
+  const exportToCSV = (users: User[], filename: string = "users-data.csv") => {
+    // CSV headers
+    const headers = [
+      "Wallet Address",
+      "Social Tasks Completed",
+      "Referral Tasks Completed",
+      "Reward Earned",
+      "Reward Status",
+      "Referral Count",
+      "Instagram Username",
+      "X Username",
+      "Telegram Username",
+      "Created At",
+    ];
+
+    // Convert users data to CSV rows
+    const csvData = users.map((user) => [
+      user.walletAddress,
+      user.socialTasksCompleted ? "Yes" : "No",
+      user.referralTasksCompleted ? "Yes" : "No",
+      user.rewardEarned,
+      user.rewardStatus,
+      user.referralCount || 0,
+      user.instagramusername || "",
+      user.xusername || "",
+      user.telegramusername || "",
+      user.createdAt || "",
+    ]);
+
+    // Combine headers and data
+    const csvContent = [headers, ...csvData]
+      .map((row) => row.map((field) => `"${field}"`).join(","))
+      .join("\n");
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Add this new function after fetchUsersData
+  const fetchAllUsersForCSV = useCallback(async () => {
+    const allUsers: User[] = [];
+    let page = 1;
+    let totalPagesAPI = totalPages || 1;
+
+    try {
+      while (page <= totalPagesAPI) {
+        const response = await apiService.getAllUsers(page);
+
+        if (response.success && response.data) {
+          const { users: pageUsers, totalPages: apiTotalPages } =
+            response.data.result;
+
+          if (apiTotalPages && apiTotalPages !== totalPagesAPI) {
+            totalPagesAPI = apiTotalPages;
+          }
+
           if (Array.isArray(pageUsers) && pageUsers.length > 0) {
             const mappedUsers: User[] = pageUsers.map((user: any) => ({
               id: user.walletAddress,
@@ -84,424 +460,95 @@ const UserManagement: React.FC = () => {
               referralCount: user.totalReferred || 0,
             }));
 
-            // Filter users that match the search query (case-insensitive partial match)
-            const matchingUsers = mappedUsers.filter((user) =>
-              user.walletAddress.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-
-            if (matchingUsers.length > 0) {
-              searchResults.push(...matchingUsers);
-
-              break; // STOP as soon as we find results
-            }
+            allUsers.push(...mappedUsers);
           }
-          
-          // Move to next page
-          searchPage++;
+
+          page++;
         } else {
-          // API error, stop searching
-          console.log(`❌ API error at page ${searchPage}, stopping search`);
           break;
         }
-
-        // Small delay to prevent overwhelming the API
-        await new Promise(resolve => setTimeout(resolve, 50));
       }
 
-      if (searchResults.length === 0) {
-        console.log(`🎯 Smart search completed: No results found after searching ${searchPage - 1} page(s)`);
-      } else {
-        console.log(`🎯 Smart search completed: Found ${searchResults.length} matching user(s)`);
-      }
-      
-      setSearchResults(searchResults);
-
+      return allUsers;
     } catch (error) {
-      console.error('❌ Smart search error:', error);
-      setError('Error occurred during search. Please try again.');
-    } finally {
-      setIsSearching(false);
+      console.error("Error fetching all users for CSV:", error);
+      throw error;
     }
   }, [totalPages]);
 
-  // Optimized debounced search effect
-  useEffect(() => {
-    const searchTimeout = setTimeout(() => {
-      if (searchTerm.trim()) {
-        performGlobalSearch(searchTerm);
-      } else {
-        setIsSearchMode(false);
-        setSearchResults([]);
-      }
-    }, 300);
+  // Replace the existing handleExportCSV function with this
 
-    return () => clearTimeout(searchTimeout);
-  }, [searchTerm, performGlobalSearch]);
-
-  // Optimized user data fetching
-  const fetchUsersData = useCallback(async (page: number = 1) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      
-
-      const response = await apiService.getAllUsers(page);
-
-      if (response.success && response.data) {
-        const {
-          totalUsers,
-          totalReferralTokensEarned,
-          users,
-          totalPages: apiTotalPages,
-        } = response.data.result;
-
-        if (Array.isArray(users)) {
-          const mappedUsers: User[] = users.map((user: any) => ({
-            id: user.walletAddress,
-            walletAddress: user.walletAddress,
-            socialTasksCompleted: user.socialTasksCompleted,
-            referralTasksCompleted: user.referralTasksCompleted,
-            hasCompletedBoth: user.hasCompletedBoth,
-            rewardEarned: user.rewardEarned,
-            rewardStatus: user.rewardStatus,
-            xusername: user.xusername || "",
-            instagramusername: user.instagramusername || "",
-            telegramusername: user.telegramusername || "",
-            createdAt: user.createdAt || "",
-            referrals: [],
-            referralCount: user.totalReferred || 0,
-          }));
-
-          const calculatedTotalPages = apiTotalPages || Math.ceil(totalUsers / itemsPerPage);
-
-          // console.log("✅ Users data fetched successfully:", {
-          //   totalUsers,
-          //   totalReferralTokensEarned,
-          //   usersCount: mappedUsers.length,
-          //   page,
-          //   totalPages: calculatedTotalPages,
-          // });
-
-          setTotalUsers(totalUsers);
-          setTotalReferralTokensEarned(totalReferralTokensEarned);
-          setUsers(mappedUsers);
-          setTotalPages(calculatedTotalPages);
-        } else {
-          setError("Users data is not in the expected format.");
-        }
-      } else {
-        const errorMessage = response.message || "Failed to fetch user data";
-        console.error("❌ API Error:", errorMessage);
-        setError(errorMessage);
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Network error occurred";
-      console.error("❌ Error fetching users:", err);
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [itemsPerPage]);
-
-  // Optimized referral fetching
-  const fetchUserReferrals = useCallback(async (userId: number, refPage: number = 1) => {
-    
-
-    const currentUserList = isSearchMode ? searchResults : users;
-    const user = currentUserList.find((u) => u.id === userId);
-    
-    if (!user?.walletAddress?.trim()) {
-      console.error("❌ Invalid user or walletAddress for user ID:", userId);
+  // Replace the existing handleExportCSV function with this
+  const handleExportCSV = useCallback(async () => {
+    // For search results, use the current search data
+    if (isSearchMode) {
+      const filename = `Wallets CSV Data-${searchTerm}-${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+      exportToCSV(searchResults, filename);
       return;
     }
 
-    setLoadingReferrals((prev) => new Map(prev).set(userId, true));
-
+    // For normal mode, fetch ALL users data
     try {
-      const response = await apiService.getReferredUsers(user.walletAddress, refPage, referralsPerPage);
-
-      if (response.success && response.data) {
-        const { referrals, pagination } = response.data;
-
-        // Update user referrals in both users and searchResults
-        const updateUserReferrals = (prevUsers: User[]) =>
-          prevUsers.map((u) => u.id === userId ? { ...u, referrals } : u);
-
-        setUsers(updateUserReferrals);
-        if (isSearchMode) {
-          setSearchResults(updateUserReferrals);
-        }
-
-        // Update referral pagination state
-        setUserReferralPagination((prev) =>
-          new Map(prev).set(userId, {
-            totalReferred: pagination.totalReferrals,
-            currentPage: pagination.currentPage,
-            totalPages: pagination.totalPages,
-          })
-        );
-      } else {
-        console.error("❌ Failed to fetch referrals for user", userId);
-      }
+      setLoading(true); // Show loading indicator
+      const allUsers = await fetchAllUsersForCSV();
+      const filename = `Wallets CSV Data-${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+      exportToCSV(allUsers, filename);
     } catch (error) {
-      console.error("❌ Error fetching referrals:", error);
+      console.error("Error exporting CSV:", error);
+      setError("Failed to Download CSV. Please try again.");
     } finally {
-      setLoadingReferrals((prev) => {
-        const newMap = new Map(prev);
-        newMap.delete(userId);
-        return newMap;
-      });
+      setLoading(false);
     }
-  }, [users, searchResults, isSearchMode, referralsPerPage]);
+  }, [isSearchMode, searchResults, searchTerm, fetchAllUsersForCSV]);
 
-  // Initialize data
-  useEffect(() => {
-    fetchUsersData(currentPage);
-  }, [currentPage, fetchUsersData]);
-
-  // Optimized refresh handler
-  const handleRefresh = useCallback(async () => {
-    setIsSearchMode(false);
-    setSearchResults([]);
-    setSearchTerm("");
-    setExpandedUsers(new Set());
-    setUserReferralPagination(new Map());
-    
-    await fetchUsersData(currentPage);
-  }, [currentPage, fetchUsersData]);
-
-  // Clear search handler
-  const handleClearSearch = useCallback(() => {
-    setSearchTerm("");
-    setIsSearchMode(false);
-    setSearchResults([]);
-    setExpandedUsers(new Set());
-    setUserReferralPagination(new Map());
-  }, []);
-
-
-
-  // Memoized filtered users
-  const filteredUsers = useMemo(() => {
-    const currentUserList = isSearchMode ? searchResults : users;
-    
-    return currentUserList.filter((user) => {
-      const matchesFilter = filterStatus === "all" || 
-        user.rewardStatus.toLowerCase() === filterStatus.toLowerCase();
-      return matchesFilter;
-    });
-  }, [users, searchResults, isSearchMode, filterStatus]);
-
-  // Memoized filter options
-  const filterOptions = useMemo(() => [
-    {
-      value: "pending",
-      label: "Pending",
-      count: users.filter((u) => u.rewardStatus.toLowerCase() === "pending").length,
-    },
-    {
-      value: "not_eligible",
-      label: "Not Eligible", 
-      count: users.filter((u) => u.rewardStatus.toLowerCase() === "not_eligible").length,
-    },
-    {
-      value: "none",
-      label: "None",
-      count: users.filter((u) => u.rewardStatus.toLowerCase() === "none").length,
-    },
-  ], [users]);
-
-  // Optimized expand handler
-  const handleToggleExpand = useCallback((userId: number) => {
-
-
-    setExpandedUsers((prev) => {
-      const newExpanded = new Set(prev);
-      if (newExpanded.has(userId)) {
-        newExpanded.delete(userId);
-        
-        // Clear referral data
-        const clearReferrals = (prevUsers: User[]) =>
-          prevUsers.map((u) => u.id === userId ? { ...u, referrals: [] } : u);
-          
-        setUsers(clearReferrals);
-        if (isSearchMode) {
-          setSearchResults(clearReferrals);
-        }
-        
-        setUserReferralPagination((prev) => {
-          const newMap = new Map(prev);
-          newMap.delete(userId);
-          return newMap;
-        });
-      } else {
-        newExpanded.add(userId);
-        fetchUserReferrals(userId, 1);
-      }
-      return newExpanded;
-    });
-  }, [isSearchMode, fetchUserReferrals]);
-
-    // Add this utility function for CSV export
-const exportToCSV = (users: User[], filename: string = 'users-data.csv') => {
-  // CSV headers
-  const headers = [
-    'Wallet Address',
-    'Social Tasks Completed',
-    'Referral Tasks Completed',
-    'Reward Earned',
-    'Reward Status',
-    'Referral Count',
-    'Instagram Username',
-    'X Username',
-    'Telegram Username',
-    'Created At'
-  ];
-
-  // Convert users data to CSV rows
-  const csvData = users.map(user => [
-    user.walletAddress,
-    user.socialTasksCompleted ? 'Yes' : 'No',
-    user.referralTasksCompleted ? 'Yes' : 'No',
-    user.rewardEarned,
-    user.rewardStatus,
-    user.referralCount || 0,
-    user.instagramusername || '',
-    user.xusername || '',
-    user.telegramusername || '',
-    user.createdAt || ''
-  ]);
-
-  // Combine headers and data
-  const csvContent = [headers, ...csvData]
-    .map(row => row.map(field => `"${field}"`).join(','))
-    .join('\n');
-
-  // Create and trigger download
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-
-// Add this new function after fetchUsersData
-const fetchAllUsersForCSV = useCallback(async () => {
-  const allUsers: User[] = [];
-  let page = 1;
-  let totalPagesAPI = totalPages || 1;
-
-  try {
-    while (page <= totalPagesAPI) {
-      const response = await apiService.getAllUsers(page);
-      
-      if (response.success && response.data) {
-        const { users: pageUsers, totalPages: apiTotalPages } = response.data.result;
-        
-        if (apiTotalPages && apiTotalPages !== totalPagesAPI) {
-          totalPagesAPI = apiTotalPages;
-        }
-        
-        if (Array.isArray(pageUsers) && pageUsers.length > 0) {
-          const mappedUsers: User[] = pageUsers.map((user: any) => ({
-            id: user.walletAddress,
-            walletAddress: user.walletAddress,
-            socialTasksCompleted: user.socialTasksCompleted,
-            referralTasksCompleted: user.referralTasksCompleted,
-            hasCompletedBoth: user.hasCompletedBoth,
-            rewardEarned: user.rewardEarned,
-            rewardStatus: user.rewardStatus,
-            xusername: user.xusername || "",
-            instagramusername: user.instagramusername || "",
-            telegramusername: user.telegramusername || "",
-            createdAt: user.createdAt || "",
-            referrals: [],
-            referralCount: user.totalReferred || 0,
-          }));
-          
-          allUsers.push(...mappedUsers);
-        }
-        
-        page++;
-      } else {
-        break;
-      }
-    }
-    
-    return allUsers;
-  } catch (error) {
-    console.error('Error fetching all users for CSV:', error);
-    throw error;
-  }
-}, [totalPages]);
-
-// Replace the existing handleExportCSV function with this
-
-// Replace the existing handleExportCSV function with this
-const handleExportCSV = useCallback(async () => {
-  // For search results, use the current search data
-  if (isSearchMode) {
-    const filename = `Wallets CSV Data-${searchTerm}-${new Date().toISOString().split('T')[0]}.csv`;
-    exportToCSV(searchResults, filename);
-    return;
-  }
-  
-  // For normal mode, fetch ALL users data
-  try {
-    setLoading(true); // Show loading indicator
-    const allUsers = await fetchAllUsersForCSV();
-    const filename = `Wallets CSV Data-${new Date().toISOString().split('T')[0]}.csv`;
-    exportToCSV(allUsers, filename);
-  } catch (error) {
-    console.error('Error exporting CSV:', error);
-    setError('Failed to export CSV. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-}, [isSearchMode, searchResults, searchTerm, fetchAllUsersForCSV]);
-
-// Add this handler function
+  // Add this handler function
 
   // Optimized page change handler
-  const handlePageChange = useCallback((page: number) => {
-    if (isSearchMode) return;
-    
-    setCurrentPage(page);
-    setExpandedUsers(new Set());
-    setUserReferralPagination(new Map());
-    setUsers((prevUsers) => prevUsers.map((user) => ({ ...user, referrals: [] })));
-  }, [isSearchMode]);
+  const handlePageChange = useCallback(
+    (page: number) => {
+      if (isSearchMode) return;
+
+      setCurrentPage(page);
+      setExpandedUsers(new Set());
+      setUserReferralPagination(new Map());
+      setUsers((prevUsers) =>
+        prevUsers.map((user) => ({ ...user, referrals: [] }))
+      );
+    },
+    [isSearchMode]
+  );
 
   // Optimized referral page change handler
-  const handleReferralPageChange = useCallback((userId: number, refPage: number) => {
-   
+  const handleReferralPageChange = useCallback(
+    (userId: number, refPage: number) => {
+      setUserReferralPagination((prev) => {
+        const currentPagination = prev.get(userId);
+        if (currentPagination) {
+          return new Map(prev).set(userId, {
+            ...currentPagination,
+            currentPage: refPage,
+          });
+        }
+        return prev;
+      });
 
-    setUserReferralPagination((prev) => {
-      const currentPagination = prev.get(userId);
-      if (currentPagination) {
-        return new Map(prev).set(userId, {
-          ...currentPagination,
-          currentPage: refPage,
-        });
-      }
-      return prev;
-    });
-
-    fetchUserReferrals(userId, refPage);
-  }, [fetchUserReferrals]);
+      fetchUserReferrals(userId, refPage);
+    },
+    [fetchUserReferrals]
+  );
 
   if (error && !isSearchMode) {
     return (
       <div className="space-y-6">
         <div className="bg-red-500/20 border border-red-500/50 rounded-2xl p-6 text-center">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-red-400 mb-2">Error Loading Data</h2>
+          <h2 className="text-xl font-bold text-red-400 mb-2">
+            Error Loading Data
+          </h2>
           <p className="text-red-300 mb-4">{error}</p>
           <button
             onClick={() => fetchUsersData(currentPage)}
@@ -517,9 +564,7 @@ const handleExportCSV = useCallback(async () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
-        
-      </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0"></div>
 
       {/* Search and Filter */}
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl p-4 sm:p-6 backdrop-blur-sm">
@@ -545,7 +590,7 @@ const handleExportCSV = useCallback(async () => {
                   ×
                 </button>
               )}
-              
+
               {/* Simplified Search Loading Indicator */}
               {isSearching && (
                 <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
@@ -555,28 +600,28 @@ const handleExportCSV = useCallback(async () => {
             </div>
           </div>
 
-            <div className="flex items-center space-x-3">
-      <button
-        onClick={handleExportCSV}
-        disabled={isSearching || filteredUsers.length === 0}
-        className="flex items-center px-4 py-2 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        title="Export current data to CSV"
-      >
-        <Download className="w-4 h-4 mr-2" />
-        <span className="hidden sm:inline">Export CSV</span>
-        <span className="sm:hidden">CSV</span>
-      </button>
-      
-      <button
-        onClick={handleRefresh}
-        disabled={isSearching}
-        className="flex items-center px-4 py-2 bg-[#00FFA9] text-black rounded-xl hover:bg-[#00e59e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <RefreshCcw className="w-4 h-4 mr-2" />
-        <span className="hidden sm:inline">Refresh</span>
-        <span className="sm:hidden">Refresh</span>
-      </button>
-    </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleExportCSV}
+              disabled={isSearching || filteredUsers.length === 0}
+              className="flex items-center px-4 py-2 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Export current data to CSV"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline"> Download CSV</span>
+              <span className="sm:hidden">CSV</span>
+            </button>
+
+            <button
+              onClick={handleRefresh}
+              disabled={isSearching}
+              className="flex items-center px-4 py-2 bg-[#00FFA9] text-black rounded-xl hover:bg-[#00e59e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCcw className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Refresh</span>
+              <span className="sm:hidden">Refresh</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -588,7 +633,7 @@ const handleExportCSV = useCallback(async () => {
             <span className="bg-[#00FFA9] px-3 py-1 rounded-full text-black flex items-center space-x-2">
               <Search className="w-3 h-3" />
               <span>
-                Search: "{searchTerm}" 
+                Search: "{searchTerm}"
                 {!isSearching && `(${searchResults.length} found)`}
                 {isSearching && " (searching...)"}
               </span>
@@ -604,7 +649,8 @@ const handleExportCSV = useCallback(async () => {
           {filterStatus !== "all" && (
             <span className="bg-gray-700 px-3 py-1 rounded-full text-white flex items-center space-x-2">
               <span>
-                Status: {filterOptions.find((f) => f.value === filterStatus)?.label}
+                Status:{" "}
+                {filterOptions.find((f) => f.value === filterStatus)?.label}
               </span>
               <button
                 onClick={() => setFilterStatus("all")}
@@ -635,31 +681,33 @@ const handleExportCSV = useCallback(async () => {
             </button>
 
             <div className="flex items-center space-x-1">
-              {Array.from({ length: Math.min(totalPages, 5) }).map((_, index) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = index + 1;
-                } else {
-                  const start = Math.max(1, currentPage - 2);
-                  const end = Math.min(totalPages, start + 4);
-                  pageNum = start + index;
-                  if (pageNum > end) return null;
-                }
+              {Array.from({ length: Math.min(totalPages, 5) }).map(
+                (_, index) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = index + 1;
+                  } else {
+                    const start = Math.max(1, currentPage - 2);
+                    const end = Math.min(totalPages, start + 4);
+                    pageNum = start + index;
+                    if (pageNum > end) return null;
+                  }
 
-                return (
-                  <button
-                    key={`page-${pageNum}`}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`px-3 py-1 rounded transition-colors ${
-                      currentPage === pageNum
-                        ? "bg-[#00FFA9] text-black"
-                        : "bg-gray-700 hover:bg-gray-600"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={`page-${pageNum}`}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-1 rounded transition-colors ${
+                        currentPage === pageNum
+                          ? "bg-[#00FFA9] text-black"
+                          : "bg-gray-700 hover:bg-gray-600"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                }
+              )}
             </div>
 
             <button
@@ -675,7 +723,7 @@ const handleExportCSV = useCallback(async () => {
 
       {/* Users Content - Responsive Layout */}
       <div className="bg-gray-800/50 border border-gray-700/50 rounded-2xl backdrop-blur-sm overflow-hidden">
-        {(loading && !isSearchMode) ? (
+        {loading && !isSearchMode ? (
           <div className="p-12 text-center">
             <Loader className="w-8 h-8 animate-spin text-[#00FFA9] mx-auto mb-4" />
             <p className="text-gray-400">Loading users data...</p>
@@ -684,7 +732,9 @@ const handleExportCSV = useCallback(async () => {
           <div className="p-12 text-center">
             <Loader className="w-8 h-8 animate-spin text-[#00FFA9] mx-auto mb-4" />
             <p className="text-gray-400">Searching for "{searchTerm}"...</p>
-            <p className="text-gray-500 text-sm mt-2">Please wait while we search through all users</p>
+            <p className="text-gray-500 text-sm mt-2">
+              Please wait while we search through all users
+            </p>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="p-12 text-center">
@@ -693,12 +743,11 @@ const handleExportCSV = useCallback(async () => {
               {isSearchMode ? "No Users Found" : "No Users Found"}
             </h3>
             <p className="text-gray-500 mb-4">
-              {isSearchMode 
+              {isSearchMode
                 ? `No users found matching "${searchTerm}".`
                 : filterStatus !== "all"
                 ? "Try adjusting your filter criteria."
-                : "No users available at the moment."
-              }
+                : "No users available at the moment."}
             </p>
             {isSearchMode && (
               <div className="space-y-2">
@@ -709,7 +758,8 @@ const handleExportCSV = useCallback(async () => {
                   Clear Search
                 </button>
                 <p className="text-xs text-gray-500">
-                  Try searching for a different wallet address or part of an address
+                  Try searching for a different wallet address or part of an
+                  address
                 </p>
               </div>
             )}
@@ -723,7 +773,8 @@ const handleExportCSV = useCallback(async () => {
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-[#00FFA9] rounded-full"></div>
                     <span className="text-[#00FFA9] font-medium">
-                      Search Results: {searchResults.length} user(s) found for "{searchTerm}"
+                      Search Results: {searchResults.length} user(s) found for "
+                      {searchTerm}"
                     </span>
                   </div>
                   <button
@@ -741,20 +792,40 @@ const handleExportCSV = useCallback(async () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-700">
-                    <th className="text-left p-6 text-gray-400 font-medium">User</th>
-                    <th className="text-left p-6 text-gray-400 font-medium">Referrals</th>
-                    <th className="text-left p-6 text-gray-400 font-medium">Rewards Earned</th>
-                    <th className="text-center p-6 text-gray-400 font-medium">Social Tasks</th>
-                    <th className="text-center p-6 text-gray-400 font-medium">Referral Tasks</th>
-                    <th className="text-center p-6 text-gray-400 font-medium">Created</th>
-                    <th className="text-center p-6 text-gray-400 font-medium">Instagram</th>
-                    <th className="text-center p-6 text-gray-400 font-medium">X</th>
-                    <th className="text-center p-6 text-gray-400 font-medium">Telegram</th>
+                    <th className="text-left p-6 text-gray-400 font-medium">
+                      User
+                    </th>
+                    <th className="text-left p-6 text-gray-400 font-medium">
+                      Referrals
+                    </th>
+                    <th className="text-left p-6 text-gray-400 font-medium">
+                      Rewards Earned
+                    </th>
+                    <th className="text-center p-6 text-gray-400 font-medium">
+                      Social Tasks
+                    </th>
+                    <th className="text-center p-6 text-gray-400 font-medium">
+                      Referral Tasks
+                    </th>
+                    <th className="text-center p-6 text-gray-400 font-medium">
+                      Created
+                    </th>
+                    <th className="text-center p-6 text-gray-400 font-medium">
+                      Instagram
+                    </th>
+                    <th className="text-center p-6 text-gray-400 font-medium">
+                      X
+                    </th>
+                    <th className="text-center p-6 text-gray-400 font-medium">
+                      Telegram
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredUsers.map((user) => {
-                    const referralPagination = userReferralPagination.get(user.id);
+                    const referralPagination = userReferralPagination.get(
+                      user.id
+                    );
 
                     return (
                       <UserRow
@@ -766,7 +837,9 @@ const handleExportCSV = useCallback(async () => {
                         currentRefPage={referralPagination?.currentPage || 1}
                         onRefPageChange={handleReferralPageChange}
                         totalReferralPages={referralPagination?.totalPages || 0}
-                        isLoadingReferrals={loadingReferrals.get(user.id) || false}
+                        isLoadingReferrals={
+                          loadingReferrals.get(user.id) || false
+                        }
                       />
                     );
                   })}
