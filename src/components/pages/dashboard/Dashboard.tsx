@@ -44,7 +44,8 @@ const Dashboard: React.FC = () => {
               Users Dashboard
             </h1>
             <p className="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">
-Monitor and manage user wallets and referral activities            </p>
+              Monitor and manage user wallets and referral activities{" "}
+            </p>
           </div>
         </div>
 
@@ -187,7 +188,7 @@ Monitor and manage user wallets and referral activities            </p>
             </div>
           </div>
         </div> */}
-        <UserManagement/>
+        <UserManagement />
       </div>
     </div>
   );
