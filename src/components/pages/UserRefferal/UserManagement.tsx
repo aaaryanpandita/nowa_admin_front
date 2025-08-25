@@ -391,15 +391,82 @@ const exportToCSV = (users: User[], filename: string = 'users-data.csv') => {
   URL.revokeObjectURL(url);
 };
 
-// Add this handler function
-const handleExportCSV = useCallback(() => {
-  const dataToExport = isSearchMode ? searchResults : filteredUsers;
-  const filename = isSearchMode 
-    ? `search-results-${searchTerm}-${new Date().toISOString().split('T')[0]}.csv`
-    : `users-data-page-${currentPage}-${new Date().toISOString().split('T')[0]}.csv`;
+// Add this new function after fetchUsersData
+const fetchAllUsersForCSV = useCallback(async () => {
+  const allUsers: User[] = [];
+  let page = 1;
+  let totalPagesAPI = totalPages || 1;
+
+  try {
+    while (page <= totalPagesAPI) {
+      const response = await apiService.getAllUsers(page);
+      
+      if (response.success && response.data) {
+        const { users: pageUsers, totalPages: apiTotalPages } = response.data.result;
+        
+        if (apiTotalPages && apiTotalPages !== totalPagesAPI) {
+          totalPagesAPI = apiTotalPages;
+        }
+        
+        if (Array.isArray(pageUsers) && pageUsers.length > 0) {
+          const mappedUsers: User[] = pageUsers.map((user: any) => ({
+            id: user.walletAddress,
+            walletAddress: user.walletAddress,
+            socialTasksCompleted: user.socialTasksCompleted,
+            referralTasksCompleted: user.referralTasksCompleted,
+            hasCompletedBoth: user.hasCompletedBoth,
+            rewardEarned: user.rewardEarned,
+            rewardStatus: user.rewardStatus,
+            xusername: user.xusername || "",
+            instagramusername: user.instagramusername || "",
+            telegramusername: user.telegramusername || "",
+            createdAt: user.createdAt || "",
+            referrals: [],
+            referralCount: user.totalReferred || 0,
+          }));
+          
+          allUsers.push(...mappedUsers);
+        }
+        
+        page++;
+      } else {
+        break;
+      }
+    }
+    
+    return allUsers;
+  } catch (error) {
+    console.error('Error fetching all users for CSV:', error);
+    throw error;
+  }
+}, [totalPages]);
+
+// Replace the existing handleExportCSV function with this
+
+// Replace the existing handleExportCSV function with this
+const handleExportCSV = useCallback(async () => {
+  // For search results, use the current search data
+  if (isSearchMode) {
+    const filename = `Wallets CSV Data-${searchTerm}-${new Date().toISOString().split('T')[0]}.csv`;
+    exportToCSV(searchResults, filename);
+    return;
+  }
   
-  exportToCSV(dataToExport, filename);
-}, [isSearchMode, searchResults, filteredUsers, searchTerm, currentPage]);
+  // For normal mode, fetch ALL users data
+  try {
+    setLoading(true); // Show loading indicator
+    const allUsers = await fetchAllUsersForCSV();
+    const filename = `Wallets CSV Data-${new Date().toISOString().split('T')[0]}.csv`;
+    exportToCSV(allUsers, filename);
+  } catch (error) {
+    console.error('Error exporting CSV:', error);
+    setError('Failed to export CSV. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+}, [isSearchMode, searchResults, searchTerm, fetchAllUsersForCSV]);
+
+// Add this handler function
 
   // Optimized page change handler
   const handlePageChange = useCallback((page: number) => {
