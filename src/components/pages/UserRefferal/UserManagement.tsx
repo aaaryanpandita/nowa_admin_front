@@ -1,11 +1,11 @@
 // Enhanced UserManagement.tsx - Simplified search with cleaner UI
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Users, AlertCircle, Loader, Filter, Search } from "lucide-react";
+import { Users, AlertCircle, Loader, Filter, Search,Download ,RefreshCcw } from "lucide-react";
 import { apiService } from "../../../services/apiService";
 import { User } from "./types/userTypes";
 import { UserRow } from "./UserRow";
 import { UserCard } from "./UserCard";
-import { RefreshCcw } from "lucide-react";
+
 
 
 
@@ -280,6 +280,8 @@ const UserManagement: React.FC = () => {
     setUserReferralPagination(new Map());
   }, []);
 
+
+
   // Memoized filtered users
   const filteredUsers = useMemo(() => {
     const currentUserList = isSearchMode ? searchResults : users;
@@ -340,6 +342,64 @@ const UserManagement: React.FC = () => {
       return newExpanded;
     });
   }, [isSearchMode, fetchUserReferrals]);
+
+    // Add this utility function for CSV export
+const exportToCSV = (users: User[], filename: string = 'users-data.csv') => {
+  // CSV headers
+  const headers = [
+    'Wallet Address',
+    'Social Tasks Completed',
+    'Referral Tasks Completed',
+    'Reward Earned',
+    'Reward Status',
+    'Referral Count',
+    'Instagram Username',
+    'X Username',
+    'Telegram Username',
+    'Created At'
+  ];
+
+  // Convert users data to CSV rows
+  const csvData = users.map(user => [
+    user.walletAddress,
+    user.socialTasksCompleted ? 'Yes' : 'No',
+    user.referralTasksCompleted ? 'Yes' : 'No',
+    user.rewardEarned,
+    user.rewardStatus,
+    user.referralCount || 0,
+    user.instagramusername || '',
+    user.xusername || '',
+    user.telegramusername || '',
+    user.createdAt || ''
+  ]);
+
+  // Combine headers and data
+  const csvContent = [headers, ...csvData]
+    .map(row => row.map(field => `"${field}"`).join(','))
+    .join('\n');
+
+  // Create and trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
+// Add this handler function
+const handleExportCSV = useCallback(() => {
+  const dataToExport = isSearchMode ? searchResults : filteredUsers;
+  const filename = isSearchMode 
+    ? `search-results-${searchTerm}-${new Date().toISOString().split('T')[0]}.csv`
+    : `users-data-page-${currentPage}-${new Date().toISOString().split('T')[0]}.csv`;
+  
+  exportToCSV(dataToExport, filename);
+}, [isSearchMode, searchResults, filteredUsers, searchTerm, currentPage]);
 
   // Optimized page change handler
   const handlePageChange = useCallback((page: number) => {
@@ -428,14 +488,28 @@ const UserManagement: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={handleRefresh}
-            disabled={isSearching}
-            className="px-4 py-2 bg-[#00FFA9] text-black rounded-xl hover:bg-[#00e59e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCcw className="w-5 h-5 mr-2 inline-block" />
-            Refresh Data
-          </button>
+            <div className="flex items-center space-x-3">
+      <button
+        onClick={handleExportCSV}
+        disabled={isSearching || filteredUsers.length === 0}
+        className="flex items-center px-4 py-2 bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        title="Export current data to CSV"
+      >
+        <Download className="w-4 h-4 mr-2" />
+        <span className="hidden sm:inline">Export CSV</span>
+        <span className="sm:hidden">CSV</span>
+      </button>
+      
+      <button
+        onClick={handleRefresh}
+        disabled={isSearching}
+        className="flex items-center px-4 py-2 bg-[#00FFA9] text-black rounded-xl hover:bg-[#00e59e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <RefreshCcw className="w-4 h-4 mr-2" />
+        <span className="hidden sm:inline">Refresh</span>
+        <span className="sm:hidden">Refresh</span>
+      </button>
+    </div>
         </div>
       </div>
 

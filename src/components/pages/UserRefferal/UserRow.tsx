@@ -445,7 +445,7 @@ export const UserRow: React.FC<UserRowProps> = ({
               Referred User
             </td>
             <td className="p-3 text-xs font-medium text-gray-400 uppercase tracking-wide">
-              Rewards
+             Referral Rewards
             </td>
             <td className="p-3 text-xs font-medium text-gray-400 uppercase tracking-wide text-center">
               Social Tasks
