@@ -44,7 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) 
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-3 bg-gray-800 text-white rounded-lg shadow-lg border border-gray-700"
+        className="md:hidden fixed top-4 left-4 z-50 lg:hidden p-3 bg-gray-800 text-white rounded-lg shadow-lg border border-gray-700"
       >
         {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -60,9 +60,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) 
       {/* Sidebar */}
       <div className={`${
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 fixed md:relative z-40 w-64 md:w-16 lg:w-52 xl:w-64 2xl:w-72 bg-gray-800 border-r border-gray-700 flex flex-col transition-all duration-300 h-full`}>
+      } md:translate-x-0 fixed md:relative z-40 w-80 md:w-16 lg:w-64 xl:w-72  bg-gray-800 border-r border-gray-700 flex flex-col transition-all duration-300 h-full`}>
       <div className="p-4 md:p-2 lg:p-4 xl:p-6 border-b border-gray-700">
-        <div className="flex items-center space-x-3 md:space-x-0 lg:space-x-2 xl:space-x-3">
+        <div className="flex items-center space-x-3 md:space-x-0 lg:space-x-3 xl:space-x-3">
           <div className="w-10 h-10 md:w-8 md:h-8 lg:w-9 lg:h-9 xl:w-10 xl:h-10  flex items-center justify-center">
             <img className="w-6 h-6 md:w-4 md:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6"  src='./onlyLogo.png'/>
           </div>
@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) 
               <li key={item.id}>
                 <button
                   onClick={() => handleTabChange(item.id)}
-                  className={`w-full flex items-center space-x-3 md:justify-center md:space-x-0 lg:justify-start lg:space-x-2 xl:space-x-3 px-4 md:px-2 lg:px-3 xl:px-4 py-3 md:py-2 lg:py-2.5 xl:py-3 rounded-xl md:rounded-lg lg:rounded-xl transition-all duration-300 ${
+                  className={`w-full flex items-center space-x-3 md:justify-center md:space-x-0 lg:justify-start lg:space-x-3  px-4 md:px-2 lg:px-4 py-3 md:py-2 lg:py-3 rounded-xl md:rounded-lg lg:rounded-xl transition-all duration-300 ${
                     isActive
                       ? 'bg-gradient-to-r from-[#00FFA9]/20 to-[#00CC87]/20 text-[#00FFA9] border border-[#00FFA9]/30'
                       : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
@@ -91,7 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onLogout }) 
                   title={item.label}
                 >
                   <Icon className="w-5 h-5 md:w-4 md:h-4 lg:w-5 lg:h-5 flex-shrink-0" />
-                  <span className="font-medium text-base md:hidden lg:inline lg:text-sm xl:text-base">{item.label}</span>
+                  <span className="font-medium text-sm md:hidden lg:inline lg:text-sm">{item.label}</span>
                 </button>
               </li>
             );

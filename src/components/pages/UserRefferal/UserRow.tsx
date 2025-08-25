@@ -13,7 +13,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { User } from "./types/userTypes";
-import { CopyButton } from './CopyButton';
+import { CopyButton } from "./CopyButton";
 
 interface UserRowProps {
   user: User;
@@ -42,10 +42,11 @@ export const UserRow: React.FC<UserRowProps> = ({
   }) => (
     <div className="flex items-center space-x-2">
       <div
-        className={`flex items-center justify-center w-5 h-5 rounded-full ${completed
-          ? "bg-green-500/20 text-green-400"
-          : "bg-red-500/20 text-red-400"
-          }`}
+        className={`flex items-center justify-center w-5 h-5 rounded-full ${
+          completed
+            ? "bg-green-500/20 text-green-400"
+            : "bg-red-500/20 text-red-400"
+        }`}
       >
         {completed ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
       </div>
@@ -94,7 +95,8 @@ export const UserRow: React.FC<UserRowProps> = ({
       }
     };
 
-    const displayName = username.length > 12 ? `${username.slice(0, 10)}...` : username;
+    const displayName =
+      username.length > 12 ? `${username.slice(0, 10)}...` : username;
 
     return (
       <div className="flex items-center space-x-1 justify-center group">
@@ -105,7 +107,11 @@ export const UserRow: React.FC<UserRowProps> = ({
         >
           {displayName}
         </span>
-        <CopyButton text={username} size="sm" className="opacity-0 group-hover:opacity-100" />
+        <CopyButton
+          text={username}
+          size="sm"
+          className="opacity-0 group-hover:opacity-100"
+        />
       </div>
     );
   };
@@ -209,10 +215,11 @@ export const UserRow: React.FC<UserRowProps> = ({
     <>
       {/* Main User Row */}
       <tr
-        className={`border-b border-gray-700/50 transition-colors ${user.referralCount && user.referralCount > 0
-          ? "hover:bg-gray-700/30 cursor-pointer"
-          : "hover:bg-gray-700/10"
-          }`}
+        className={`border-b border-gray-700/50 transition-colors ${
+          user.referralCount && user.referralCount > 0
+            ? "hover:bg-gray-700/30 cursor-pointer"
+            : "hover:bg-gray-700/10"
+        }`}
         onClick={handleRowClick}
       >
         <td className="p-4 lg:p-6">
@@ -229,17 +236,27 @@ export const UserRow: React.FC<UserRowProps> = ({
               <div className="w-4 h-4"></div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-white font-medium text-sm lg:text-base font-mono break-all" title={user.walletAddress}>
+              <p
+                className="text-white font-medium text-sm lg:text-base font-mono whitespace-nowrap"
+                title={user.walletAddress}
+              >
                 <span className="hidden lg:inline">
                   {user.walletAddress.length > 20
-                    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
+                    ? `${user.walletAddress.slice(
+                        0,
+                        6
+                      )}...${user.walletAddress.slice(-6)}`
                     : user.walletAddress}
                 </span>
                 <span className="lg:hidden">
                   {user.walletAddress.length > 20
-                    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-2)}`
+                    ? `${user.walletAddress.slice(
+                        0,
+                        6
+                      )}...${user.walletAddress.slice(-2)}`
                     : user.walletAddress}
                 </span>
+
                 <CopyButton text={user.walletAddress} size="sm" />
               </p>
 
@@ -259,7 +276,6 @@ export const UserRow: React.FC<UserRowProps> = ({
             <span className="text-white font-medium">
               {user.referralCount || 0}
             </span>
-
           </div>
         </td>
         <td className="p-4 lg:p-6">
@@ -270,8 +286,9 @@ export const UserRow: React.FC<UserRowProps> = ({
         </td>
         <td className="p-4 lg:p-6 text-center">
           <div
-            className={`text-sm ${user.socialTasksCompleted ? "text-green-400" : "text-red-400"
-              }`}
+            className={`text-sm ${
+              user.socialTasksCompleted ? "text-green-400" : "text-red-400"
+            }`}
           >
             <span className="hidden lg:inline">
               {user.socialTasksCompleted ? "Completed" : "Not Completed"}
@@ -283,8 +300,9 @@ export const UserRow: React.FC<UserRowProps> = ({
         </td>
         <td className="p-4 lg:p-6 text-center">
           <div
-            className={`text-sm ${user.referralTasksCompleted ? "text-green-400" : "text-red-400"
-              }`}
+            className={`text-sm ${
+              user.referralTasksCompleted ? "text-green-400" : "text-red-400"
+            }`}
           >
             <span className="hidden lg:inline">
               {user.referralTasksCompleted ? "Completed" : "Not Completed"}
@@ -384,10 +402,11 @@ export const UserRow: React.FC<UserRowProps> = ({
                               e.stopPropagation();
                               handleReferralPageChange(pageNumber);
                             }}
-                            className={`px-2 py-1 rounded transition-colors text-xs min-w-[28px] ${currentRefPage === pageNumber
-                              ? "bg-[#00FFA9] text-black font-medium"
-                              : "bg-gray-700 hover:bg-gray-600 text-white"
-                              }`}
+                            className={`px-2 py-1 rounded transition-colors text-xs min-w-[28px] ${
+                              currentRefPage === pageNumber
+                                ? "bg-[#00FFA9] text-black font-medium"
+                                : "bg-gray-700 hover:bg-gray-600 text-white"
+                            }`}
                             title={`Go to page ${pageNumber}`}
                           >
                             {pageNumber}
@@ -427,7 +446,10 @@ export const UserRow: React.FC<UserRowProps> = ({
                           { length: actualTotalPages },
                           (_, i) => i + 1
                         ).map((page) => (
-                          <option key={`jump-page-${user.id}-${page}`} value={page}>
+                          <option
+                            key={`jump-page-${user.id}-${page}`}
+                            value={page}
+                          >
                             Page {page}
                           </option>
                         ))}
@@ -445,7 +467,7 @@ export const UserRow: React.FC<UserRowProps> = ({
               Referred User
             </td>
             <td className="p-3 text-xs font-medium text-gray-400 uppercase tracking-wide">
-             Referral Rewards
+              Referral Rewards
             </td>
             <td className="p-3 text-xs font-medium text-gray-400 uppercase tracking-wide text-center">
               Social Tasks
@@ -488,24 +510,29 @@ export const UserRow: React.FC<UserRowProps> = ({
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-[#00FFA9] rounded-full"></div>
                     <span
-                      className="text-white text-sm font-mono break-all lg:break-normal"
+                      className="text-white text-sm font-mono whitespace-nowrap"
                       title={referral.walletAddress} // full address on hover
                     >
                       {/* Desktop view: first 6 + last 6 */}
                       <span className="hidden lg:inline">
                         {referral.walletAddress.length > 20
-                          ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-6)}`
+                          ? `${referral.walletAddress.slice(
+                              0,
+                              6
+                            )}...${referral.walletAddress.slice(-6)}`
                           : referral.walletAddress}
                       </span>
                       <span className="lg:hidden">
                         {referral.walletAddress.length > 12
-                          ? `${referral.walletAddress.slice(0, 4)}...${referral.walletAddress.slice(-4)}`
+                          ? `${referral.walletAddress.slice(
+                              0,
+                              4
+                            )}...${referral.walletAddress.slice(-4)}`
                           : referral.walletAddress}
                       </span>
-
                     </span>
 
-                    <CopyButton text={referral.walletAddress} size="sm"  />
+                    <CopyButton text={referral.walletAddress} size="sm" />
                   </div>
                 </td>
                 <td className="p-3">

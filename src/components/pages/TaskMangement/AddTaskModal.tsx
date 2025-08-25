@@ -111,7 +111,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
           {/* Task Link */}
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Task Link 
+              Task Link <span className="text-red-400">*</span>
             </label>
             <input
               type="url"
@@ -119,6 +119,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
               onChange={(e) => onTaskChange('link', e.target.value)}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:border-[#00FFA9] focus:ring-2 focus:ring-[#00FFA9]/25 transition-all duration-300"
               placeholder="https://example.com"
+              required
               disabled={addingTask}
             />
           </div>
@@ -179,7 +180,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={addingTask || !newTask.title.trim() || !newTask.description.trim()}
+              disabled={addingTask || !newTask.title.trim() || !newTask.description.trim()|| !newTask.link.trim()}
               className="flex-1 bg-gradient-to-r from-[#00FFA9] to-[#00CC87] text-black font-semibold py-3 px-4 rounded-xl hover:scale-105 transition-all duration-300 disabled:hover:scale-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {addingTask ? (

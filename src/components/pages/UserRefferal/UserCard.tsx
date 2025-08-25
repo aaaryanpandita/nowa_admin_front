@@ -105,7 +105,7 @@ export const UserCard: React.FC<UserCardProps> = ({
       <div className="flex items-center space-x-1 group">
         <div className={getPlatformColor()}>{getIcon()}</div>
         <span
-          className="text-white text-xs font-mono break-all max-w-[100px] sm:max-w-none truncate"
+          className="text-white text-xs font-mono whitespace-nowrap max-w-[100px] sm:max-w-none truncate"
           title={`${username}`}
         >
           {displayName}
@@ -209,7 +209,7 @@ export const UserCard: React.FC<UserCardProps> = ({
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium font-mono text-sm break-all" title={user.walletAddress}>
+              <p className="text-white font-medium font-mono text-sm whitespace-nowrap" title={user.walletAddress}>
                 {user.walletAddress.length > 20
                   ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-6)}`
                   : user.walletAddress}
@@ -397,7 +397,7 @@ export const UserCard: React.FC<UserCardProps> = ({
                   {/* Referral Header */}
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="w-2 h-2 bg-[#00FFA9] rounded-full"></div>
-                    <span className="text-white text-sm font-mono break-all" title={referral.walletAddress}>
+                    <span className="text-white text-sm font-mono whitespace-nowrap" title={referral.walletAddress}>
                       {referral.walletAddress.length > 20
                         ? `${referral.walletAddress.slice(0, 6)}...${referral.walletAddress.slice(-6)}`
                         : referral.walletAddress}

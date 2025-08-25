@@ -1,6 +1,6 @@
 // services/apiService.ts - Enhanced with getReferredUsers method
 const API_BASE_URL = 'https://nowa-ref-api.tarality.io/api/v1';
-//const API_BASE_URL = 'http://localhost:8083/api/v1';
+// const API_BASE_URL = 'http://172.16.16.206:8083/api/v1';
 
 interface LoginCredentials {
   email: string;

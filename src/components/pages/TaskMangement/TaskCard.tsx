@@ -154,7 +154,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit , onDelete}) => {
             className="flex items-center space-x-2 text-[#00FFA9] hover:text-[#00CC87] transition-colors text-sm"
           >
             <ExternalLink className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">View Task</span>
+            <span className="truncate">View Task Link</span>
           </a>
         )}
       </div>
