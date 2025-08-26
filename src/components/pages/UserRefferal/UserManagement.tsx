@@ -681,22 +681,54 @@ const UserManagement: React.FC = () => {
             </button>
 
             <div className="flex items-center space-x-1">
-              {Array.from({ length: Math.min(totalPages, 5) }).map(
-                (_, index) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = index + 1;
+              {(() => {
+                const pages = [];
+
+                if (totalPages <= 7) {
+                  for (let i = 1; i <= totalPages; i++) {
+                    pages.push(i);
+                  }
+                } else {
+                  if (currentPage <= 3) {
+                    pages.push(1, 2, 3, 4, "...", totalPages);
+                  } else if (currentPage >= totalPages - 2) {
+                    pages.push(
+                      1,
+                      "...",
+                      totalPages - 3,
+                      totalPages - 2,
+                      totalPages - 1,
+                      totalPages
+                    );
                   } else {
-                    const start = Math.max(1, currentPage - 2);
-                    const end = Math.min(totalPages, start + 4);
-                    pageNum = start + index;
-                    if (pageNum > end) return null;
+                    pages.push(
+                      1,
+                      "...",
+                      currentPage - 1,
+                      currentPage,
+                      currentPage + 1,
+                      "...",
+                      totalPages
+                    );
+                  }
+                }
+
+                return pages.map((pageNum, index) => {
+                  if (pageNum === "...") {
+                    return (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className="px-2 text-gray-400"
+                      >
+                        ...
+                      </span>
+                    );
                   }
 
                   return (
                     <button
                       key={`page-${pageNum}`}
-                      onClick={() => handlePageChange(pageNum)}
+                      onClick={() => handlePageChange(pageNum as number)}
                       className={`px-3 py-1 rounded transition-colors ${
                         currentPage === pageNum
                           ? "bg-[#00FFA9] text-black"
@@ -706,8 +738,8 @@ const UserManagement: React.FC = () => {
                       {pageNum}
                     </button>
                   );
-                }
-              )}
+                });
+              })()}
             </div>
 
             <button

@@ -156,29 +156,41 @@ export const UserCard: React.FC<UserCardProps> = ({
   const currentReferrals = user.referrals || [];
 
   // Generate page numbers for referral pagination
-  const generatePageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 3; // Fewer on mobile
+// Generate page numbers for referral pagination - matches main pagination logic
+const generatePageNumbers = () => {
+  const pages = [];
 
-    if (actualTotalPages <= maxVisiblePages) {
-      for (let i = 1; i <= actualTotalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentRefPage <= 2) {
-        pages.push(1, 2, 3);
-        if (actualTotalPages > 3) {
-          pages.push("...", actualTotalPages);
-        }
-      } else if (currentRefPage >= actualTotalPages - 1) {
-        pages.push(1, "...", actualTotalPages - 2, actualTotalPages - 1, actualTotalPages);
-      } else {
-        pages.push(1, "...", currentRefPage, "...", actualTotalPages);
-      }
+  if (actualTotalPages <= 7) {
+    for (let i = 1; i <= actualTotalPages; i++) {
+      pages.push(i);
     }
+  } else {
+    if (currentRefPage <= 3) {
+      pages.push(1, 2, 3, 4, "...", actualTotalPages);
+    } else if (currentRefPage >= actualTotalPages - 2) {
+      pages.push(
+        1,
+        "...",
+        actualTotalPages - 3,
+        actualTotalPages - 2,
+        actualTotalPages - 1,
+        actualTotalPages
+      );
+    } else {
+      pages.push(
+        1,
+        "...",
+        currentRefPage - 1,
+        currentRefPage,
+        currentRefPage + 1,
+        "...",
+        actualTotalPages
+      );
+    }
+  }
 
-    return pages;
-  };
+  return pages;
+};
 
   const pageNumbers = generatePageNumbers();
 

@@ -164,7 +164,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ onError }) => {
         change={usersChange.value}
         trend={usersChange.trend}
         icon={Users}
-        color="from-green-600 to-green-600"
+        color="from-[#00feae] to-green-600"
         isLoading={isLoading}
       />
 

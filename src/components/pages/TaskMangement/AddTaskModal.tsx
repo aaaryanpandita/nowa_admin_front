@@ -61,18 +61,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({
         </div>
         
         {/* Error Message */}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center space-x-3 mb-4">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-red-400 font-medium">Error</p>
-              <p className="text-red-300 text-sm">{error}</p>
-            </div>
-            <button onClick={onErrorClose} className="text-red-400 hover:text-red-300">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+    
         
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">

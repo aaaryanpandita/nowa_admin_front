@@ -458,7 +458,7 @@ async getReferredUsers(
      
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch daily tasks');
+        throw new Error(data.message);
       }
 
       return {
