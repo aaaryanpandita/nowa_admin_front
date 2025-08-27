@@ -1,5 +1,11 @@
 // Enhanced UserManagement.tsx - Simplified search with cleaner UI
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   Users,
   AlertCircle,
@@ -20,6 +26,8 @@ const UserManagement: React.FC = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalReferralTokensEarned, setTotalReferralTokensEarned] = useState(0);
   const [loading, setLoading] = useState(true);
+  // Add this near your other state declarations
+  const searchAbortControllerRef = useRef<AbortController | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedUsers, setExpandedUsers] = useState<Set<number>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -54,6 +62,15 @@ const UserManagement: React.FC = () => {
         return;
       }
 
+      // Cancel any ongoing search
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort();
+      }
+
+      // Create new abort controller for this search
+      const abortController = new AbortController();
+      searchAbortControllerRef.current = abortController;
+
       setIsSearching(true);
       setIsSearchMode(true);
 
@@ -62,15 +79,23 @@ const UserManagement: React.FC = () => {
         let searchPage = 1;
         let totalPagesFound = totalPages || 1;
 
-        // Search page by page, stop when results are found
-        while (searchPage <= totalPagesFound) {
+        // Search page by page, stop when results are found or cancelled
+        while (
+          searchPage <= totalPagesFound &&
+          !abortController.signal.aborted
+        ) {
           const response = await apiService.getAllUsers(searchPage);
+
+          // Check if search was cancelled
+          if (abortController.signal.aborted) {
+            console.log("Search cancelled");
+            return;
+          }
 
           if (response.success && response.data) {
             const { users: pageUsers, totalPages: apiTotalPages } =
               response.data.result;
 
-            // Update total pages if we get new information
             if (apiTotalPages && apiTotalPages !== totalPagesFound) {
               totalPagesFound = apiTotalPages;
             }
@@ -92,7 +117,6 @@ const UserManagement: React.FC = () => {
                 referralCount: user.totalReferred || 0,
               }));
 
-              // Filter users that match the search query (case-insensitive partial match)
               const matchingUsers = mappedUsers.filter((user) =>
                 user.walletAddress
                   .toLowerCase()
@@ -101,54 +125,56 @@ const UserManagement: React.FC = () => {
 
               if (matchingUsers.length > 0) {
                 searchResults.push(...matchingUsers);
-
-                break; // STOP as soon as we find results
+                break;
               }
             }
 
-            // Move to next page
             searchPage++;
           } else {
-            // API error, stop searching
-            console.log(`❌ API error at page ${searchPage}, stopping search`);
             break;
           }
 
-          // Small delay to prevent overwhelming the API
+          // Check again before delay
+          if (abortController.signal.aborted) {
+            return;
+          }
+
           await new Promise((resolve) => setTimeout(resolve, 50));
         }
 
-        if (searchResults.length === 0) {
-          console.log(
-            `🎯 Smart search completed: No results found after searching ${
-              searchPage - 1
-            } page(s)`
-          );
-        } else {
-          console.log(
-            `🎯 Smart search completed: Found ${searchResults.length} matching user(s)`
-          );
+        // Only update state if search wasn't cancelled
+        if (!abortController.signal.aborted) {
+          setSearchResults(searchResults);
         }
-
-        setSearchResults(searchResults);
       } catch (error) {
-        console.error("❌ Smart search error:", error);
-        setError("Error occurred during search. Please try again.");
+        if (error.name !== "AbortError") {
+          console.error("Search error:", error);
+          setError("Error occurred during search. Please try again.");
+        }
       } finally {
-        setIsSearching(false);
+        // Only update loading state if this is still the current search
+        if (searchAbortControllerRef.current === abortController) {
+          setIsSearching(false);
+          searchAbortControllerRef.current = null;
+        }
       }
     },
     [totalPages]
   );
 
-  // Optimized debounced search effect
   useEffect(() => {
     const searchTimeout = setTimeout(() => {
       if (searchTerm.trim()) {
         performGlobalSearch(searchTerm);
       } else {
+        // Cancel any ongoing search when clearing
+        if (searchAbortControllerRef.current) {
+          searchAbortControllerRef.current.abort();
+          searchAbortControllerRef.current = null;
+        }
         setIsSearchMode(false);
         setSearchResults([]);
+        setIsSearching(false); // Add this line
       }
     }, 300);
 
@@ -298,9 +324,16 @@ const UserManagement: React.FC = () => {
 
   // Clear search handler
   const handleClearSearch = useCallback(() => {
+    // Cancel any ongoing search
+    if (searchAbortControllerRef.current) {
+      searchAbortControllerRef.current.abort();
+      searchAbortControllerRef.current = null;
+    }
+
     setSearchTerm("");
     setIsSearchMode(false);
     setSearchResults([]);
+    setIsSearching(false); // Add this line
     setExpandedUsers(new Set());
     setUserReferralPagination(new Map());
   }, []);
@@ -477,8 +510,6 @@ const UserManagement: React.FC = () => {
   }, [totalPages]);
 
   // Replace the existing handleExportCSV function with this
-
-  // Replace the existing handleExportCSV function with this
   const handleExportCSV = useCallback(async () => {
     // For search results, use the current search data
     if (isSearchMode) {
@@ -578,14 +609,13 @@ const UserManagement: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-gray-700/50 border border-gray-600 rounded-xl pl-10 pr-12 py-3 text-white placeholder-gray-400 focus:border-[#00FFA9] focus:ring-2 focus:ring-[#00FFA9]/25 transition-all duration-300"
-                disabled={isSearching}
               />
               {searchTerm && (
                 <button
                   onClick={handleClearSearch}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors text-lg"
                   title="Clear search"
-                  disabled={isSearching}
+                  type="button"
                 >
                   ×
                 </button>
@@ -630,16 +660,20 @@ const UserManagement: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="text-gray-400">Active filters:</span>
           {isSearchMode && (
-            <span className="bg-[#00FFA9] px-3 py-1 rounded-full text-black flex items-center space-x-2">
-              <Search className="w-3 h-3" />
-              <span>
+            <span className="bg-[#00FFA9] px-3 py-1 rounded-full text-black flex flex-wrap items-center gap-1 sm:gap-2 max-w-full">
+              <Search className="w-3 h-3 flex-shrink-0" />
+
+              {/* Search text */}
+              <span className="text-xs sm:text-sm truncate max-w-[150px] sm:max-w-none">
                 Search: "{searchTerm}"
-                {!isSearching && `(${searchResults.length} found)`}
+                {!isSearching && ` (${searchResults.length} found)`}
                 {isSearching && " (searching...)"}
               </span>
+
+              {/* Clear button */}
               <button
                 onClick={handleClearSearch}
-                className="text-black/70 hover:text-black"
+                className="text-black/70 hover:text-black text-lg leading-none flex-shrink-0"
                 disabled={isSearching}
               >
                 ×
