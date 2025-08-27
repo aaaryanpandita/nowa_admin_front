@@ -146,7 +146,7 @@ const UserManagement: React.FC = () => {
         if (!abortController.signal.aborted) {
           setSearchResults(searchResults);
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.name !== "AbortError") {
           console.error("Search error:", error);
           setError("Error occurred during search. Please try again.");
